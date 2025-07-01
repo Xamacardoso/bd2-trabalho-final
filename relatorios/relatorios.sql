@@ -68,3 +68,29 @@ BEGIN
     ORDER BY total_vendas DESC;
 END;    
 $$ LANGUAGE plpgsql;
+
+-- Relatório 6: Analise de vendas por tipo de midia
+CREATE OR REPLACE VIEW v_rel_analise_vendas_tipo_midia AS
+SELECT
+    tm.nome AS tipo_midia,
+    SUM(iv.qtd_item) AS itens_vendidos,
+    SUM(iv.subtotal) AS total_vendas
+FROM tipo_midia tm
+JOIN midia m ON tm.cod_tipo_midia = m.cod_tipo_midia
+JOIN item_venda iv ON m.cod_midia = iv.cod_midia
+GROUP BY tm.nome
+ORDER BY total_vendas DESC;
+
+-- Relatório 7: Analise de vendas por categoria
+CREATE OR REPLACE VIEW v_rel_analise_vendas_categoria AS
+SELECT
+    c.nome AS categoria,
+    SUM(iv.qtd_item) AS itens_vendidos,
+    SUM(iv.subtotal) AS total_vendas
+FROM categoria c
+JOIN titulo_categoria tc ON c.cod_categoria = tc.cod_categoria
+JOIN titulo t ON tc.cod_titulo = t.cod_titulo
+JOIN midia m ON t.cod_titulo = m.cod_titulo
+JOIN item_venda iv ON m.cod_midia = iv.cod_midia
+GROUP BY c.nome
+ORDER BY total_vendas DESC;
