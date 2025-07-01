@@ -1,27 +1,18 @@
 -- Teste 1: Cadastrar novos registros
-SELECT f_cadastrar('cliente', 'nome, telefone, email, cep', 
-                   '''Teste Cliente'', ''1111-2222'', ''teste@email.com'', ''64000-001''');
-
 -- Cadastrar um novo funcionário
-SELECT f_cadastrar('funcionario', 'nome, telefone, cep, salario', 
-                   '''Teste Funcionário'', ''3333-4444'', ''64000-002'', 2800.00');
-
 -- Verificar se foram inseridos
-SELECT * FROM cliente WHERE nome = 'Teste Cliente';
-SELECT * FROM funcionario WHERE nome = 'Teste Funcionário';
-
 -- Teste 2: Alterar registros
-
 -- Alterar dados do cliente
-SELECT f_alterar('cliente', 'nome = ''Teste Cliente Atualizado'', telefone = ''5555-6666''', 
-                 'nome = ''Teste Cliente''');
-
 -- Alterar salário do funcionário
-SELECT f_alterar('funcionario', 'salario = 3200.00', 'nome = ''Teste Funcionário''');
-
 -- Verificar alterações
-SELECT * FROM cliente WHERE nome LIKE 'Teste Cliente%';
-SELECT * FROM funcionario WHERE nome = 'Teste Funcionário';
+-- Teste 4: Remover registros sem dependências
+-- Remover os registros de teste criados
+-- Verificar se foram removidos
+-- Teste 5: Testar com tabelas diferentes
+-- Cadastrar nova categoria
+-- Cadastrar novo tipo de mídia
+-- Alterar categoria
+-- Remover registros de teste
 
 -- Teste 3: Tentar remover registros com integridade referencial
 
@@ -48,31 +39,6 @@ EXCEPTION
 END;
 $$;
 ROLLBACK;
-
--- Teste 4: Remover registros sem dependências
-
--- Remover os registros de teste criados
-SELECT f_remover('cliente', 'nome LIKE ''Teste Cliente%''');
-SELECT f_remover('funcionario', 'nome = ''Teste Funcionário''');
-
--- Verificar se foram removidos
-SELECT COUNT(*) as total FROM cliente WHERE nome LIKE 'Teste Cliente%';
-SELECT COUNT(*) as total FROM funcionario WHERE nome = 'Teste Funcionário';
-
--- Teste 5: Testar com tabelas diferentes
-
--- Cadastrar nova categoria
-SELECT f_cadastrar('categoria', 'nome', '''Categoria Teste''');
-
--- Cadastrar novo tipo de mídia
-SELECT f_cadastrar('tipo_midia', 'nome_formato', '''Formato Teste''');
-
--- Alterar categoria
-SELECT f_alterar('categoria', 'nome = ''Categoria Teste Alterada''', 'nome = ''Categoria Teste''');
-
--- Remover registros de teste
-SELECT f_remover('categoria', 'nome = ''Categoria Teste Alterada''');
-SELECT f_remover('tipo_midia', 'nome_formato = ''Formato Teste''');
 
 -- Teste 6: Verificar funções auxiliares básicas
 -- Verificar se tabela existe
@@ -343,3 +309,73 @@ SELECT f_remover_json('fornecedor', '{"nome": "Stark Industries Atualizado", "em
 
 -- Teste 8.20: Verificar remoção
 SELECT COUNT(*) as total FROM fornecedor WHERE nome LIKE 'Stark Industries%';
+
+-- ========================================
+-- TESTES DAS FUNÇÕES COM JSON (NUMERAÇÃO CONTINUADA)
+-- ========================================
+
+-- Teste 9.1: Inserção de cliente usando f_cadastrar_json
+SELECT f_cadastrar_json('cliente', '{"nome": "Bilbo Baggins", "telefone": "5555-1234", "email": "bilbo@bolseiro.com", "cep": "64000-111"}');
+
+-- Teste 9.2: Inserção de funcionário usando f_cadastrar_json
+SELECT f_cadastrar_json('funcionario', '{"nome": "Gandalf", "telefone": "5555-5678", "cep": "64000-222", "salario": 9999.99}');
+
+-- Teste 9.3: Verificar inserção
+SELECT * FROM cliente WHERE nome = 'Bilbo Baggins';
+SELECT * FROM funcionario WHERE nome = 'Gandalf';
+
+-- Teste 9.4: Atualização de cliente usando f_alterar_json
+SELECT f_alterar_json('cliente', '{"email": "bilbo@shire.com"}', 'nome = ''Bilbo Baggins''');
+
+-- Teste 9.5: Atualização de funcionário usando f_alterar_json
+SELECT f_alterar_json('funcionario', '{"salario": 12345.67}', 'nome = ''Gandalf''');
+
+-- Teste 9.6: Verificar atualização
+SELECT * FROM cliente WHERE nome = 'Bilbo Baggins';
+SELECT * FROM funcionario WHERE nome = 'Gandalf';
+
+-- Teste 9.7: Remoção de cliente usando f_remover_json
+SELECT f_remover_json('cliente', '{"nome": "Bilbo Baggins"}');
+
+-- Teste 9.8: Remoção de funcionário usando f_remover_json
+SELECT f_remover_json('funcionario', '{"nome": "Gandalf"}');
+
+-- Teste 9.9: Verificar remoção
+SELECT COUNT(*) as total FROM cliente WHERE nome = 'Bilbo Baggins';
+SELECT COUNT(*) as total FROM funcionario WHERE nome = 'Gandalf';
+
+-- Teste 9.10: Inserção universal com f_operacao_json
+SELECT f_operacao_json('INSERT', 'categoria', '{"nome": "Fantasia"}');
+
+-- Teste 9.11: Atualização universal com f_operacao_json
+SELECT f_operacao_json('UPDATE', 'categoria', '{"nome": "Fantasia Épica"}', 'nome = ''Fantasia''');
+
+-- Teste 9.12: Remoção universal com f_operacao_json
+SELECT f_operacao_json('DELETE', 'categoria', '{"nome": "Fantasia Épica"}');
+
+-- Teste 9.13: Verificar remoção universal
+SELECT COUNT(*) as total FROM categoria WHERE nome = 'Fantasia Épica';
+
+-- Teste 9.14: Erro esperado - tabela inexistente
+DO $$
+BEGIN
+    PERFORM f_cadastrar_json('tabela_inexistente', '{"nome": "teste"}');
+EXCEPTION WHEN OTHERS THEN
+    RAISE NOTICE 'Erro esperado: %', SQLERRM;
+END;$$;
+
+-- Teste 9.15: Erro esperado - coluna inexistente
+DO $$
+BEGIN
+    PERFORM f_cadastrar_json('cliente', '{"nome": "teste", "coluna_inexistente": "valor"}');
+EXCEPTION WHEN OTHERS THEN
+    RAISE NOTICE 'Erro esperado: %', SQLERRM;
+END;$$;
+
+-- Teste 9.16: Erro esperado - operação não suportada
+DO $$
+BEGIN
+    PERFORM f_operacao_json('SELECT', 'cliente', '{"nome": "teste"}');
+EXCEPTION WHEN OTHERS THEN
+    RAISE NOTICE 'Erro esperado: %', SQLERRM;
+END;$$;

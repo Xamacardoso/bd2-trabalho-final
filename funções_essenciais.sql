@@ -240,17 +240,26 @@ DECLARE
     coluna text;
     valor text;
     comando text;
+    colunas_json text[];
+    i integer := 0;
 BEGIN
     -- Verifica se a tabela existe
     IF NOT tabela_existe(nome_tabela) THEN
         RAISE EXCEPTION 'A tabela % não existe!', nome_tabela;
     END IF;
 
-    -- Constrói a cláusula SET
+    -- Extrai colunas do JSON
     FOR coluna, valor IN SELECT * FROM json_each_text(dados)
     LOOP
+        i := i + 1;
+        colunas_json[i] := coluna;
         sets := array_append(sets, format('%I = %s', coluna, valor));
     END LOOP;
+
+    -- Verifica se as colunas existem
+    IF NOT colunas_existem(nome_tabela, array_to_string(colunas_json, ',')) THEN
+        RAISE EXCEPTION 'Uma ou mais colunas não existem na tabela %!', nome_tabela;
+    END IF;
 
     -- Monta e executa o comando UPDATE
     comando := format('UPDATE %I SET %s WHERE %s', 
