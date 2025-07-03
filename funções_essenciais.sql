@@ -179,6 +179,484 @@ BEGIN
     EXECUTE comando;
 
     RAISE INFO 'Registro(s) removido(s) com sucesso da tabela %!', nome_tabela;
-    RETURN NULL;
 END;
 $$ LANGUAGE plpgsql;
+
+-- ========================================
+-- VERSÕES COM JSON DAS FUNÇÕES PRINCIPAIS
+-- ========================================
+
+CREATE OR REPLACE FUNCTION f_cadastrar_json(
+    nome_tabela text,
+    dados json
+)
+RETURNS void AS $$
+DECLARE
+    colunas_v text[];
+    valores_v text[];
+    coluna_v text;
+    valor_v text;
+    comando_v text;
+    i_v integer := 0;
+    tipo_coluna_v text;
+    cod_cliente_v int;
+    cod_funcionario_v int;
+    cod_fornecedor_v int;
+    cod_titulo_v int;
+    cod_tipo_midia_v int;
+    cod_categoria_v int;
+    cod_midia_v int;
+    cod_compra_v int;
+    cod_venda_v int;
+BEGIN
+    -- Verifica se a tabela existe
+    IF NOT tabela_existe(nome_tabela) THEN
+        RAISE EXCEPTION 'A tabela % não existe!', nome_tabela;
+    END IF;
+
+    -- Extrai colunas e valores do JSON
+    FOR coluna_v, valor_v IN SELECT * FROM json_each_text(dados)
+    LOOP
+        i_v := i_v + 1;
+        colunas_v[i_v] := coluna_v;
+        
+        -- Verifica o tipo da coluna para formatar o valor adequadamente
+        SELECT data_type INTO tipo_coluna_v 
+        FROM information_schema.columns 
+        WHERE table_name = nome_tabela AND column_name = coluna_v;
+        
+        -- Tratamento especial para campos que usam nomes em vez de códigos
+        IF coluna_v = 'nome_cliente' THEN
+            -- Busca o código do cliente pelo nome (aplicando formatação)
+            SELECT cod_cliente INTO cod_cliente_v FROM cliente WHERE nome = initcap(valor_v);
+            IF cod_cliente_v IS NULL THEN
+                RAISE EXCEPTION 'Cliente com nome "%" não encontrado!', valor_v;
+            END IF;
+            valores_v[i_v] := cod_cliente_v::text;
+            colunas_v[i_v] := 'cod_cliente';
+            
+        ELSIF coluna_v = 'nome_funcionario' THEN
+            -- Busca o código do funcionário pelo nome (aplicando formatação)
+            SELECT cod_funcionario INTO cod_funcionario_v FROM funcionario WHERE nome = initcap(valor_v);
+            IF cod_funcionario_v IS NULL THEN
+                RAISE EXCEPTION 'Funcionário com nome "%" não encontrado!', valor_v;
+            END IF;
+            valores_v[i_v] := cod_funcionario_v::text;
+            colunas_v[i_v] := 'cod_funcionario';
+            
+        ELSIF coluna_v = 'nome_fornecedor' THEN
+            -- Busca o código do fornecedor pelo nome (aplicando formatação)
+            SELECT cod_fornecedor INTO cod_fornecedor_v FROM fornecedor WHERE nome = initcap(valor_v);
+            IF cod_fornecedor_v IS NULL THEN
+                RAISE EXCEPTION 'Fornecedor com nome "%" não encontrado!', valor_v;
+            END IF;
+            valores_v[i_v] := cod_fornecedor_v::text;
+            colunas_v[i_v] := 'cod_fornecedor';
+            
+        ELSIF coluna_v = 'nome_titulo' THEN
+            -- Busca o código do título pelo nome (aplicando formatação)
+            SELECT cod_titulo INTO cod_titulo_v FROM titulo WHERE nome = initcap(valor_v);
+            IF cod_titulo_v IS NULL THEN
+                RAISE EXCEPTION 'Título com nome "%" não encontrado!', valor_v;
+            END IF;
+            valores_v[i_v] := cod_titulo_v::text;
+            colunas_v[i_v] := 'cod_titulo';
+            
+        ELSIF coluna_v = 'nome_tipo_midia' THEN
+            -- Busca o código do tipo de mídia pelo nome (aplicando formatação)
+            SELECT cod_tipo_midia INTO cod_tipo_midia_v FROM tipo_midia WHERE nome_formato = valor_v;
+            IF cod_tipo_midia_v IS NULL THEN
+                RAISE EXCEPTION 'Tipo de mídia com nome "%" não encontrado!', valor_v;
+            END IF;
+            valores_v[i_v] := cod_tipo_midia_v::text;
+            colunas_v[i_v] := 'cod_tipo_midia';
+            
+        ELSIF coluna_v = 'nome_categoria' THEN
+            -- Busca o código da categoria pelo nome (aplicando formatação)
+            SELECT cod_categoria INTO cod_categoria_v FROM categoria WHERE nome = initcap(valor_v);
+            IF cod_categoria_v IS NULL THEN
+                RAISE EXCEPTION 'Categoria com nome "%" não encontrada!', valor_v;
+            END IF;
+            valores_v[i_v] := cod_categoria_v::text;
+            colunas_v[i_v] := 'cod_categoria';
+            
+        ELSIF coluna_v = 'nome_midia' THEN
+            -- Busca o código da mídia pelo título (aplicando formatação)
+            SELECT m.cod_midia INTO cod_midia_v 
+            FROM midia m 
+            JOIN titulo t ON m.cod_titulo = t.cod_titulo 
+            WHERE t.nome = initcap(valor_v);
+            IF cod_midia_v IS NULL THEN
+                RAISE EXCEPTION 'Mídia com título "%" não encontrada!', valor_v;
+            END IF;
+            valores_v[i_v] := cod_midia_v::text;
+            colunas_v[i_v] := 'cod_midia';
+            
+        ELSIF coluna_v = 'cod_compra' AND valor_v ~ '^[0-9]+$' THEN
+            -- Se for um número, mantém como está
+            valores_v[i_v] := valor_v;
+            
+        ELSIF coluna_v = 'cod_venda' AND valor_v ~ '^[0-9]+$' THEN
+            -- Se for um número, mantém como está
+            valores_v[i_v] := valor_v;
+            
+        ELSE
+            -- Formata o valor baseado no tipo da coluna
+            IF tipo_coluna_v IN ('character varying', 'text', 'date', 'timestamp', 'timestamp without time zone') THEN
+                -- Para strings, datas e timestamps, adiciona aspas simples
+                valores_v[i_v] := quote_literal(valor_v);
+            ELSE
+                -- Para números e outros tipos, usa o valor diretamente
+                valores_v[i_v] := valor_v;
+            END IF;
+        END IF;
+    END LOOP;
+
+    -- Verifica se as colunas existem
+    IF NOT colunas_existem(nome_tabela, array_to_string(colunas_v, ',')) THEN
+        RAISE EXCEPTION 'Uma ou mais colunas não existem na tabela %!', nome_tabela;
+    END IF;
+
+    -- Monta e executa o INSERT
+    comando_v := format('INSERT INTO %I (%s) VALUES (%s)', 
+                     nome_tabela, 
+                     array_to_string(colunas_v, ','), 
+                     array_to_string(valores_v, ','));
+    EXECUTE comando_v;
+
+    RAISE INFO 'Registro incluído com sucesso na tabela %!', nome_tabela;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION f_alterar_json(
+    nome_tabela text,
+    dados json,
+    condicao text
+)
+RETURNS void AS $$
+DECLARE
+    sets text[];
+    coluna text;
+    valor text;
+    comando text;
+    colunas_json text[];
+    i integer := 0;
+    tipo_coluna text;
+BEGIN
+    -- Verifica se a tabela existe
+    IF NOT tabela_existe(nome_tabela) THEN
+        RAISE EXCEPTION 'A tabela % não existe!', nome_tabela;
+    END IF;
+
+    -- Extrai colunas do JSON
+    FOR coluna, valor IN SELECT * FROM json_each_text(dados)
+    LOOP
+        i := i + 1;
+        colunas_json[i] := coluna;
+        
+        -- Verifica o tipo da coluna para formatar o valor adequadamente
+        SELECT data_type INTO tipo_coluna 
+        FROM information_schema.columns 
+        WHERE table_name = nome_tabela AND column_name = coluna;
+        
+        -- Formata o valor baseado no tipo da coluna
+        IF tipo_coluna IN ('character varying', 'text', 'date', 'timestamp', 'timestamp without time zone') THEN
+            -- Para strings, datas e timestamps, adiciona aspas simples
+            sets := array_append(sets, format('%I = %s', coluna, quote_literal(valor)));
+        ELSE
+            -- Para números e outros tipos, usa o valor diretamente
+            sets := array_append(sets, format('%I = %s', coluna, valor));
+        END IF;
+    END LOOP;
+
+    -- Verifica se as colunas existem
+    IF NOT colunas_existem(nome_tabela, array_to_string(colunas_json, ',')) THEN
+        RAISE EXCEPTION 'Uma ou mais colunas não existem na tabela %!', nome_tabela;
+    END IF;
+
+    -- Monta e executa o comando UPDATE
+    comando := format('UPDATE %I SET %s WHERE %s', 
+                     nome_tabela, 
+                     array_to_string(sets, ', '), 
+                     condicao);
+    EXECUTE comando;
+
+    RAISE INFO 'Registro atualizado com sucesso na tabela %!', nome_tabela;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION f_remover_json(
+    nome_tabela text,
+    condicoes json
+)
+RETURNS void AS $$
+DECLARE
+    comando text;
+    condicao_final text;
+    coluna text;
+    valor text;
+    condicoes_array text[];
+    qtd_relacionados INTEGER;
+    tipo_coluna text;
+BEGIN
+    -- Verifica se a tabela existe
+    IF NOT tabela_existe(nome_tabela) THEN
+        RAISE EXCEPTION 'A tabela % não existe!', nome_tabela;
+    END IF;
+
+    -- Constrói condições a partir do JSON
+    FOR coluna, valor IN SELECT * FROM json_each_text(condicoes)
+    LOOP
+        -- Verifica o tipo da coluna para formatar o valor adequadamente
+        SELECT data_type INTO tipo_coluna 
+        FROM information_schema.columns 
+        WHERE table_name = nome_tabela AND column_name = coluna;
+        
+        -- Formata o valor baseado no tipo da coluna
+        IF tipo_coluna IN ('character varying', 'text', 'date', 'timestamp', 'timestamp without time zone') THEN
+            -- Para strings, datas e timestamps, adiciona aspas simples
+            condicoes_array := array_append(condicoes_array, format('%I = %s', coluna, quote_literal(valor)));
+        ELSE
+            -- Para números e outros tipos, usa o valor diretamente
+            condicoes_array := array_append(condicoes_array, format('%I = %s', coluna, valor));
+        END IF;
+    END LOOP;
+
+    condicao_final := array_to_string(condicoes_array, ' AND ');
+
+    -- Verificações de integridade por tabela (mesma lógica da função original)
+    IF nome_tabela = 'fornecedor' THEN
+        EXECUTE 'SELECT COUNT(*) FROM compra WHERE cod_fornecedor IN (SELECT cod_fornecedor FROM fornecedor WHERE ' || condicao_final || ')' INTO qtd_relacionados;
+        IF qtd_relacionados > 0 THEN
+            RAISE EXCEPTION 'Não é possível remover o fornecedor, pois ele possui % compras registradas.', qtd_relacionados;
+        END IF;
+    ELSIF nome_tabela = 'categoria' THEN
+        EXECUTE 'SELECT COUNT(*) FROM titulo_categoria WHERE cod_categoria IN (SELECT cod_categoria FROM categoria WHERE ' || condicao_final || ')' INTO qtd_relacionados;
+        IF qtd_relacionados > 0 THEN
+            RAISE EXCEPTION 'Não é possível remover a categoria, pois existem % títulos associados.', qtd_relacionados;
+        END IF;
+    ELSIF nome_tabela = 'cliente' THEN
+        EXECUTE 'SELECT COUNT(*) FROM venda WHERE cod_cliente IN (SELECT cod_cliente FROM cliente WHERE ' || condicao_final || ')' INTO qtd_relacionados;
+        IF qtd_relacionados > 0 THEN
+            RAISE EXCEPTION 'Não é possível remover o cliente, pois ele possui % vendas registradas.', qtd_relacionados;
+        END IF;
+    ELSIF nome_tabela = 'funcionario' THEN
+        EXECUTE 'SELECT COUNT(*) FROM venda WHERE cod_funcionario IN (SELECT cod_funcionario FROM funcionario WHERE ' || condicao_final || ')' INTO qtd_relacionados;
+        IF qtd_relacionados > 0 THEN
+            RAISE EXCEPTION 'Não é possível remover o funcionário, pois ele possui % vendas registradas.', qtd_relacionados;
+        END IF;
+    ELSIF nome_tabela = 'titulo' THEN
+        EXECUTE 'SELECT COUNT(*) FROM midia WHERE cod_titulo IN (SELECT cod_titulo FROM titulo WHERE ' || condicao_final || ')' INTO qtd_relacionados;
+        IF qtd_relacionados > 0 THEN
+            RAISE EXCEPTION 'Não é possível remover o título, pois existem % mídias associadas.', qtd_relacionados;
+        END IF;
+    ELSIF nome_tabela = 'tipo_midia' THEN
+        EXECUTE 'SELECT COUNT(*) FROM midia WHERE cod_tipo_midia IN (SELECT cod_tipo_midia FROM tipo_midia WHERE ' || condicao_final || ')' INTO qtd_relacionados;
+        IF qtd_relacionados > 0 THEN
+            RAISE EXCEPTION 'Não é possível remover o tipo de mídia, pois existem % mídias associadas.', qtd_relacionados;
+        END IF;
+    ELSIF nome_tabela = 'compra' THEN
+        EXECUTE 'SELECT COUNT(*) FROM item_compra WHERE cod_compra IN (SELECT cod_compra FROM compra WHERE ' || condicao_final || ')' INTO qtd_relacionados;
+        IF qtd_relacionados > 0 THEN
+            RAISE EXCEPTION 'Não é possível remover a compra, pois ela possui % itens registrados.', qtd_relacionados;
+        END IF;
+    ELSIF nome_tabela = 'midia' THEN
+        EXECUTE 'SELECT COUNT(*) FROM item_compra WHERE cod_midia IN (SELECT cod_midia FROM midia WHERE ' || condicao_final || ')' INTO qtd_relacionados;
+        IF qtd_relacionados > 0 THEN
+            RAISE EXCEPTION 'Não é possível remover a mídia, pois ela possui % itens de compra registrados.', qtd_relacionados;
+        END IF;
+        EXECUTE 'SELECT COUNT(*) FROM item_venda WHERE cod_midia IN (SELECT cod_midia FROM midia WHERE ' || condicao_final || ')' INTO qtd_relacionados;
+        IF qtd_relacionados > 0 THEN
+            RAISE EXCEPTION 'Não é possível remover a mídia, pois ela possui % itens de venda registrados.', qtd_relacionados;
+        END IF;
+    ELSIF nome_tabela = 'venda' THEN
+        EXECUTE 'SELECT COUNT(*) FROM item_venda WHERE cod_venda IN (SELECT cod_venda FROM venda WHERE ' || condicao_final || ')' INTO qtd_relacionados;
+        IF qtd_relacionados > 0 THEN
+            RAISE EXCEPTION 'Não é possível remover a venda, pois ela possui % itens registrados.', qtd_relacionados;
+        END IF;
+    END IF;
+
+    -- Monta e executa o comando DELETE
+    comando := format('DELETE FROM %I WHERE %s', nome_tabela, condicao_final);
+    EXECUTE comando;
+
+    RAISE INFO 'Registro(s) removido(s) com sucesso da tabela %!', nome_tabela;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Função Universal com JSON para todas as operações
+CREATE OR REPLACE FUNCTION f_operacao_json(
+    operacao text, -- 'INSERT', 'UPDATE', 'DELETE'
+    nome_tabela text,
+    dados json DEFAULT NULL,
+    condicao text DEFAULT NULL
+)
+RETURNS void AS $$
+DECLARE
+    comando text;
+    colunas text[];
+    valores text[];
+    sets text[];
+    condicoes_array text[];
+    coluna text;
+    valor text;
+    i integer := 0;
+    qtd_relacionados INTEGER;
+    condicao_final text;
+    tipo_coluna text;
+BEGIN
+    -- Verifica se a tabela existe
+    IF NOT tabela_existe(nome_tabela) THEN
+        RAISE EXCEPTION 'A tabela % não existe!', nome_tabela;
+    END IF;
+
+    CASE operacao
+        WHEN 'INSERT' THEN
+            -- Extrai colunas e valores do JSON
+            FOR coluna, valor IN SELECT * FROM json_each_text(dados)
+            LOOP
+                i := i + 1;
+                colunas[i] := coluna;
+                
+                -- Verifica o tipo da coluna para formatar o valor adequadamente
+                SELECT data_type INTO tipo_coluna 
+                FROM information_schema.columns 
+                WHERE table_name = nome_tabela AND column_name = coluna;
+                
+                -- Formata o valor baseado no tipo da coluna
+                IF tipo_coluna IN ('character varying', 'text', 'date', 'timestamp', 'timestamp without time zone') THEN
+                    -- Para strings, datas e timestamps, adiciona aspas simples
+                    valores[i] := quote_literal(valor);
+                ELSE
+                    -- Para números e outros tipos, usa o valor diretamente
+                    valores[i] := valor;
+                END IF;
+            END LOOP;
+
+            -- Verifica se as colunas existem
+            IF NOT colunas_existem(nome_tabela, array_to_string(colunas, ',')) THEN
+                RAISE EXCEPTION 'Uma ou mais colunas não existem na tabela %!', nome_tabela;
+            END IF;
+
+            comando := format('INSERT INTO %I (%s) VALUES (%s)', 
+                             nome_tabela, 
+                             array_to_string(colunas, ','), 
+                             array_to_string(valores, ','));
+
+        WHEN 'UPDATE' THEN
+            -- Constrói a cláusula SET
+            FOR coluna, valor IN SELECT * FROM json_each_text(dados)
+            LOOP
+                -- Verifica o tipo da coluna para formatar o valor adequadamente
+                SELECT data_type INTO tipo_coluna 
+                FROM information_schema.columns 
+                WHERE table_name = nome_tabela AND column_name = coluna;
+                
+                -- Formata o valor baseado no tipo da coluna
+                IF tipo_coluna IN ('character varying', 'text', 'date', 'timestamp', 'timestamp without time zone') THEN
+                    -- Para strings, datas e timestamps, adiciona aspas simples
+                    sets := array_append(sets, format('%I = %s', coluna, quote_literal(valor)));
+                ELSE
+                    -- Para números e outros tipos, usa o valor diretamente
+                    sets := array_append(sets, format('%I = %s', coluna, valor));
+                END IF;
+            END LOOP;
+
+            comando := format('UPDATE %I SET %s WHERE %s', 
+                             nome_tabela, 
+                             array_to_string(sets, ', '), 
+                             condicao);
+
+        WHEN 'DELETE' THEN
+            -- Constrói condições a partir do JSON
+            FOR coluna, valor IN SELECT * FROM json_each_text(dados)
+            LOOP
+                -- Verifica o tipo da coluna para formatar o valor adequadamente
+                SELECT data_type INTO tipo_coluna 
+                FROM information_schema.columns 
+                WHERE table_name = nome_tabela AND column_name = coluna;
+                
+                -- Formata o valor baseado no tipo da coluna
+                IF tipo_coluna IN ('character varying', 'text', 'date', 'timestamp', 'timestamp without time zone') THEN
+                    -- Para strings, datas e timestamps, adiciona aspas simples
+                    condicoes_array := array_append(condicoes_array, format('%I = %s', coluna, quote_literal(valor)));
+                ELSE
+                    -- Para números e outros tipos, usa o valor diretamente
+                    condicoes_array := array_append(condicoes_array, format('%I = %s', coluna, valor));
+                END IF;
+            END LOOP;
+
+            condicao_final := array_to_string(condicoes_array, ' AND ');
+
+            -- Verificações de integridade por tabela (mesma lógica da função original)
+            IF nome_tabela = 'fornecedor' THEN
+                EXECUTE 'SELECT COUNT(*) FROM compra WHERE cod_fornecedor IN (SELECT cod_fornecedor FROM fornecedor WHERE ' || condicao_final || ')' INTO qtd_relacionados;
+                IF qtd_relacionados > 0 THEN
+                    RAISE EXCEPTION 'Não é possível remover o fornecedor, pois ele possui % compras registradas.', qtd_relacionados;
+                END IF;
+            ELSIF nome_tabela = 'categoria' THEN
+                EXECUTE 'SELECT COUNT(*) FROM titulo_categoria WHERE cod_categoria IN (SELECT cod_categoria FROM categoria WHERE ' || condicao_final || ')' INTO qtd_relacionados;
+                IF qtd_relacionados > 0 THEN
+                    RAISE EXCEPTION 'Não é possível remover a categoria, pois existem % títulos associados.', qtd_relacionados;
+                END IF;
+            ELSIF nome_tabela = 'cliente' THEN
+                EXECUTE 'SELECT COUNT(*) FROM venda WHERE cod_cliente IN (SELECT cod_cliente FROM cliente WHERE ' || condicao_final || ')' INTO qtd_relacionados;
+                IF qtd_relacionados > 0 THEN
+                    RAISE EXCEPTION 'Não é possível remover o cliente, pois ele possui % vendas registradas.', qtd_relacionados;
+                END IF;
+            ELSIF nome_tabela = 'funcionario' THEN
+                EXECUTE 'SELECT COUNT(*) FROM venda WHERE cod_funcionario IN (SELECT cod_funcionario FROM funcionario WHERE ' || condicao_final || ')' INTO qtd_relacionados;
+                IF qtd_relacionados > 0 THEN
+                    RAISE EXCEPTION 'Não é possível remover o funcionário, pois ele possui % vendas registradas.', qtd_relacionados;
+                END IF;
+            ELSIF nome_tabela = 'titulo' THEN
+                EXECUTE 'SELECT COUNT(*) FROM midia WHERE cod_titulo IN (SELECT cod_titulo FROM titulo WHERE ' || condicao_final || ')' INTO qtd_relacionados;
+                IF qtd_relacionados > 0 THEN
+                    RAISE EXCEPTION 'Não é possível remover o título, pois existem % mídias associadas.', qtd_relacionados;
+                END IF;
+            ELSIF nome_tabela = 'tipo_midia' THEN
+                EXECUTE 'SELECT COUNT(*) FROM midia WHERE cod_tipo_midia IN (SELECT cod_tipo_midia FROM tipo_midia WHERE ' || condicao_final || ')' INTO qtd_relacionados;
+                IF qtd_relacionados > 0 THEN
+                    RAISE EXCEPTION 'Não é possível remover o tipo de mídia, pois existem % mídias associadas.', qtd_relacionados;
+                END IF;
+            ELSIF nome_tabela = 'compra' THEN
+                EXECUTE 'SELECT COUNT(*) FROM item_compra WHERE cod_compra IN (SELECT cod_compra FROM compra WHERE ' || condicao_final || ')' INTO qtd_relacionados;
+                IF qtd_relacionados > 0 THEN
+                    RAISE EXCEPTION 'Não é possível remover a compra, pois ela possui % itens registrados.', qtd_relacionados;
+                END IF;
+            ELSIF nome_tabela = 'midia' THEN
+                EXECUTE 'SELECT COUNT(*) FROM item_compra WHERE cod_midia IN (SELECT cod_midia FROM midia WHERE ' || condicao_final || ')' INTO qtd_relacionados;
+                IF qtd_relacionados > 0 THEN
+                    RAISE EXCEPTION 'Não é possível remover a mídia, pois ela possui % itens de compra registrados.', qtd_relacionados;
+                END IF;
+                EXECUTE 'SELECT COUNT(*) FROM item_venda WHERE cod_midia IN (SELECT cod_midia FROM midia WHERE ' || condicao_final || ')' INTO qtd_relacionados;
+                IF qtd_relacionados > 0 THEN
+                    RAISE EXCEPTION 'Não é possível remover a mídia, pois ela possui % itens de venda registrados.', qtd_relacionados;
+                END IF;
+            ELSIF nome_tabela = 'venda' THEN
+                EXECUTE 'SELECT COUNT(*) FROM item_venda WHERE cod_venda IN (SELECT cod_venda FROM venda WHERE ' || condicao_final || ')' INTO qtd_relacionados;
+                IF qtd_relacionados > 0 THEN
+                    RAISE EXCEPTION 'Não é possível remover a venda, pois ela possui % itens registrados.', qtd_relacionados;
+                END IF;
+            END IF;
+
+            comando := format('DELETE FROM %I WHERE %s', 
+                             nome_tabela, 
+                             condicao_final);
+
+        ELSE
+            RAISE EXCEPTION 'Operação % não suportada!', operacao;
+    END CASE;
+
+    EXECUTE comando;
+    RAISE INFO 'Operação % executada com sucesso na tabela %!', operacao, nome_tabela;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Padroniza o campo email: tudo minúsculo (apenas se o campo existir)
+-- Verifica se a tabela tem o campo email antes de tentar acessá-lo
+IF TG_TABLE_NAME IN ('cliente', 'fornecedor') THEN
+    IF NEW.email IS NOT NULL THEN
+        NEW.email := lower(NEW.email);
+    END IF;
+END IF;
