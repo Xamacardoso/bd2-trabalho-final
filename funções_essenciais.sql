@@ -179,7 +179,6 @@ BEGIN
     EXECUTE comando;
 
     RAISE INFO 'Registro(s) removido(s) com sucesso da tabela %!', nome_tabela;
-    RETURN NULL;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -199,6 +198,7 @@ DECLARE
     valor text;
     comando text;
     i integer := 0;
+    tipo_coluna text;
 BEGIN
     -- Verifica se a tabela existe
     IF NOT tabela_existe(nome_tabela) THEN
@@ -210,7 +210,20 @@ BEGIN
     LOOP
         i := i + 1;
         colunas[i] := coluna;
-        valores[i] := valor;
+        
+        -- Verifica o tipo da coluna para formatar o valor adequadamente
+        SELECT data_type INTO tipo_coluna 
+        FROM information_schema.columns 
+        WHERE table_name = nome_tabela AND column_name = coluna;
+        
+        -- Formata o valor baseado no tipo da coluna
+        IF tipo_coluna IN ('character varying', 'text', 'date', 'timestamp', 'timestamp without time zone') THEN
+            -- Para strings, datas e timestamps, adiciona aspas simples
+            valores[i] := quote_literal(valor);
+        ELSE
+            -- Para números e outros tipos, usa o valor diretamente
+            valores[i] := valor;
+        END IF;
     END LOOP;
 
     -- Verifica se as colunas existem
@@ -242,6 +255,7 @@ DECLARE
     comando text;
     colunas_json text[];
     i integer := 0;
+    tipo_coluna text;
 BEGIN
     -- Verifica se a tabela existe
     IF NOT tabela_existe(nome_tabela) THEN
@@ -253,7 +267,20 @@ BEGIN
     LOOP
         i := i + 1;
         colunas_json[i] := coluna;
-        sets := array_append(sets, format('%I = %s', coluna, valor));
+        
+        -- Verifica o tipo da coluna para formatar o valor adequadamente
+        SELECT data_type INTO tipo_coluna 
+        FROM information_schema.columns 
+        WHERE table_name = nome_tabela AND column_name = coluna;
+        
+        -- Formata o valor baseado no tipo da coluna
+        IF tipo_coluna IN ('character varying', 'text', 'date', 'timestamp', 'timestamp without time zone') THEN
+            -- Para strings, datas e timestamps, adiciona aspas simples
+            sets := array_append(sets, format('%I = %s', coluna, quote_literal(valor)));
+        ELSE
+            -- Para números e outros tipos, usa o valor diretamente
+            sets := array_append(sets, format('%I = %s', coluna, valor));
+        END IF;
     END LOOP;
 
     -- Verifica se as colunas existem
@@ -284,6 +311,7 @@ DECLARE
     valor text;
     condicoes_array text[];
     qtd_relacionados INTEGER;
+    tipo_coluna text;
 BEGIN
     -- Verifica se a tabela existe
     IF NOT tabela_existe(nome_tabela) THEN
@@ -293,7 +321,19 @@ BEGIN
     -- Constrói condições a partir do JSON
     FOR coluna, valor IN SELECT * FROM json_each_text(condicoes)
     LOOP
-        condicoes_array := array_append(condicoes_array, format('%I = %s', coluna, valor));
+        -- Verifica o tipo da coluna para formatar o valor adequadamente
+        SELECT data_type INTO tipo_coluna 
+        FROM information_schema.columns 
+        WHERE table_name = nome_tabela AND column_name = coluna;
+        
+        -- Formata o valor baseado no tipo da coluna
+        IF tipo_coluna IN ('character varying', 'text', 'date', 'timestamp', 'timestamp without time zone') THEN
+            -- Para strings, datas e timestamps, adiciona aspas simples
+            condicoes_array := array_append(condicoes_array, format('%I = %s', coluna, quote_literal(valor)));
+        ELSE
+            -- Para números e outros tipos, usa o valor diretamente
+            condicoes_array := array_append(condicoes_array, format('%I = %s', coluna, valor));
+        END IF;
     END LOOP;
 
     condicao_final := array_to_string(condicoes_array, ' AND ');
@@ -355,7 +395,6 @@ BEGIN
     EXECUTE comando;
 
     RAISE INFO 'Registro(s) removido(s) com sucesso da tabela %!', nome_tabela;
-    RETURN NULL;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -378,6 +417,7 @@ DECLARE
     i integer := 0;
     qtd_relacionados INTEGER;
     condicao_final text;
+    tipo_coluna text;
 BEGIN
     -- Verifica se a tabela existe
     IF NOT tabela_existe(nome_tabela) THEN
@@ -391,7 +431,20 @@ BEGIN
             LOOP
                 i := i + 1;
                 colunas[i] := coluna;
-                valores[i] := valor;
+                
+                -- Verifica o tipo da coluna para formatar o valor adequadamente
+                SELECT data_type INTO tipo_coluna 
+                FROM information_schema.columns 
+                WHERE table_name = nome_tabela AND column_name = coluna;
+                
+                -- Formata o valor baseado no tipo da coluna
+                IF tipo_coluna IN ('character varying', 'text', 'date', 'timestamp', 'timestamp without time zone') THEN
+                    -- Para strings, datas e timestamps, adiciona aspas simples
+                    valores[i] := quote_literal(valor);
+                ELSE
+                    -- Para números e outros tipos, usa o valor diretamente
+                    valores[i] := valor;
+                END IF;
             END LOOP;
 
             -- Verifica se as colunas existem
@@ -408,7 +461,19 @@ BEGIN
             -- Constrói a cláusula SET
             FOR coluna, valor IN SELECT * FROM json_each_text(dados)
             LOOP
-                sets := array_append(sets, format('%I = %s', coluna, valor));
+                -- Verifica o tipo da coluna para formatar o valor adequadamente
+                SELECT data_type INTO tipo_coluna 
+                FROM information_schema.columns 
+                WHERE table_name = nome_tabela AND column_name = coluna;
+                
+                -- Formata o valor baseado no tipo da coluna
+                IF tipo_coluna IN ('character varying', 'text', 'date', 'timestamp', 'timestamp without time zone') THEN
+                    -- Para strings, datas e timestamps, adiciona aspas simples
+                    sets := array_append(sets, format('%I = %s', coluna, quote_literal(valor)));
+                ELSE
+                    -- Para números e outros tipos, usa o valor diretamente
+                    sets := array_append(sets, format('%I = %s', coluna, valor));
+                END IF;
             END LOOP;
 
             comando := format('UPDATE %I SET %s WHERE %s', 
@@ -420,7 +485,19 @@ BEGIN
             -- Constrói condições a partir do JSON
             FOR coluna, valor IN SELECT * FROM json_each_text(dados)
             LOOP
-                condicoes_array := array_append(condicoes_array, format('%I = %s', coluna, valor));
+                -- Verifica o tipo da coluna para formatar o valor adequadamente
+                SELECT data_type INTO tipo_coluna 
+                FROM information_schema.columns 
+                WHERE table_name = nome_tabela AND column_name = coluna;
+                
+                -- Formata o valor baseado no tipo da coluna
+                IF tipo_coluna IN ('character varying', 'text', 'date', 'timestamp', 'timestamp without time zone') THEN
+                    -- Para strings, datas e timestamps, adiciona aspas simples
+                    condicoes_array := array_append(condicoes_array, format('%I = %s', coluna, quote_literal(valor)));
+                ELSE
+                    -- Para números e outros tipos, usa o valor diretamente
+                    condicoes_array := array_append(condicoes_array, format('%I = %s', coluna, valor));
+                END IF;
             END LOOP;
 
             condicao_final := array_to_string(condicoes_array, ' AND ');
@@ -489,3 +566,11 @@ BEGIN
     RAISE INFO 'Operação % executada com sucesso na tabela %!', operacao, nome_tabela;
 END;
 $$ LANGUAGE plpgsql;
+
+-- Padroniza o campo email: tudo minúsculo (apenas se o campo existir)
+-- Verifica se a tabela tem o campo email antes de tentar acessá-lo
+IF TG_TABLE_NAME IN ('cliente', 'fornecedor') THEN
+    IF NEW.email IS NOT NULL THEN
+        NEW.email := lower(NEW.email);
+    END IF;
+END IF;

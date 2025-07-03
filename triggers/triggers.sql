@@ -18,9 +18,7 @@ EXECUTE FUNCTION atualizar_estoque_venda();
 CREATE OR REPLACE FUNCTION calcular_subtotal_venda()
 RETURNS TRIGGER AS $$
 BEGIN
-    UPDATE item_venda
-    SET subtotal = (SELECT valor_unid FROM midia WHERE cod_midia = NEW.cod_midia) * NEW.qtd_item
-    WHERE cod_item_venda = NEW.cod_item_venda;
+    NEW.subtotal := (SELECT valor_unid FROM midia WHERE cod_midia = NEW.cod_midia) * NEW.qtd_item;
     RETURN NEW; 
 END;
 $$ LANGUAGE plpgsql;
@@ -102,12 +100,24 @@ $$
 	DECLARE
 	quantidade_nova_compra int;
 	BEGIN
+		-- Atualiza o estoque da mídia
 		SELECT coalesce(sum(quantidade), 0) into quantidade_nova_compra from item_compra AS ic
 		WHERE ic.cod_compra = new.cod_compra;
 
 		UPDATE midia 
 		SET qtd_estoque = qtd_estoque + quantidade_nova_compra
 		WHERE midia.cod_midia = new.cod_midia;
+
+		-- Atualiza o total da compra baseado na soma dos subtotais dos itens
+		UPDATE compra
+		SET total = (
+			SELECT COALESCE(SUM(subtotal), 0)
+			FROM item_compra
+			WHERE cod_compra = new.cod_compra
+		)
+		WHERE cod_compra = new.cod_compra;
+
+		RETURN NEW;
 	END;
 $$
 LANGUAGE plpgsql;
@@ -116,6 +126,39 @@ CREATE TRIGGER tr_atualizar_estoque_compra
 AFTER INSERT ON item_compra
 FOR EACH ROW
 EXECUTE FUNCTION atualizar_estoque_compra();
+
+-- Trigger para recalcular total da compra quando itens são modificados
+CREATE OR REPLACE FUNCTION recalcular_total_compra()
+RETURNS TRIGGER AS
+$$
+BEGIN
+    -- Recalcula o total da compra somando todos os subtotais dos itens
+    IF (TG_OP = 'DELETE') THEN
+        UPDATE compra
+        SET total = (
+            SELECT COALESCE(SUM(subtotal), 0)
+            FROM item_compra
+            WHERE cod_compra = OLD.cod_compra
+        )
+        WHERE cod_compra = OLD.cod_compra;
+    ELSE
+        UPDATE compra
+        SET total = (
+            SELECT COALESCE(SUM(subtotal), 0)
+            FROM item_compra
+            WHERE cod_compra = NEW.cod_compra
+        )
+        WHERE cod_compra = NEW.cod_compra;
+    END IF;
+    
+    RETURN CASE WHEN TG_OP = 'DELETE' THEN OLD ELSE NEW END;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_recalcular_total_compra
+AFTER UPDATE OR DELETE ON item_compra
+FOR EACH ROW
+EXECUTE FUNCTION recalcular_total_compra();
 
 --Trigger 7:
 
@@ -200,25 +243,106 @@ $$
 				RAISE EXCEPTION 'O total da venda não pode ser negativo ou nulo! Valor: %', NEW.total;
 			END IF;
 		END IF;
+
+		RETURN NEW;
 	END;
 $$
 LANGUAGE plpgsql;
 
+-- Triggers para controle de valores inválidos (um para cada tabela)
+CREATE TRIGGER trg_controle_valores_invalidos_midia
+BEFORE INSERT OR UPDATE ON midia
+FOR EACH ROW
+EXECUTE FUNCTION controle_valores_invalidos();
+
+CREATE TRIGGER trg_controle_valores_invalidos_item_venda
+BEFORE INSERT OR UPDATE ON item_venda
+FOR EACH ROW
+EXECUTE FUNCTION controle_valores_invalidos();
+
+CREATE TRIGGER trg_controle_valores_invalidos_item_compra
+BEFORE INSERT OR UPDATE ON item_compra
+FOR EACH ROW
+EXECUTE FUNCTION controle_valores_invalidos();
+
+CREATE TRIGGER trg_controle_valores_invalidos_funcionario
+BEFORE INSERT OR UPDATE ON funcionario
+FOR EACH ROW
+EXECUTE FUNCTION controle_valores_invalidos();
+
+CREATE TRIGGER trg_controle_valores_invalidos_titulo
+BEFORE INSERT OR UPDATE ON titulo
+FOR EACH ROW
+EXECUTE FUNCTION controle_valores_invalidos();
+
+CREATE TRIGGER trg_controle_valores_invalidos_compra
+BEFORE INSERT OR UPDATE ON compra
+FOR EACH ROW
+EXECUTE FUNCTION controle_valores_invalidos();
+
+CREATE TRIGGER trg_controle_valores_invalidos_venda
+BEFORE INSERT OR UPDATE ON venda
+FOR EACH ROW
+EXECUTE FUNCTION controle_valores_invalidos();
 
 -- Trigger 9: Manutenção da Integridade Textual (Uppercase/Lowercase)
 
 -- Função para padronizar campos de texto em CLIENTE, FUNCIONARIO e FORNECEDOR
 CREATE OR REPLACE FUNCTION padronizar_texto_campos()
 RETURNS TRIGGER AS $$
+DECLARE
+    valor_antigo_nome text;
+    valor_antigo_email text;
+    valor_antigo_telefone text;
+    valor_antigo_cep text;
+    alteracoes text := '';
 BEGIN
+    -- Armazena valores antigos para comparação
+    valor_antigo_nome := NEW.nome;
+    valor_antigo_email := NEW.email;
+    valor_antigo_telefone := NEW.telefone;
+	IF TG_TABLE_NAME IN ('cliente', 'funcionario') THEN
+    	valor_antigo_cep := NEW.cep;
+	END IF;
+
     -- Padroniza o campo nome: apenas iniciais maiúsculas
     IF NEW.nome IS NOT NULL THEN
         NEW.nome := initcap(NEW.nome);
+        IF valor_antigo_nome != NEW.nome THEN
+            alteracoes := alteracoes || 'Nome: "' || valor_antigo_nome || '" → "' || NEW.nome || '" | ';
+        END IF;
     END IF;
 
-    -- Padroniza o campo email: tudo minúsculo
-    IF NEW.email IS NOT NULL THEN
-        NEW.email := lower(NEW.email);
+    -- Padroniza o campo email: tudo minúsculo (apenas se o campo existir)
+    IF TG_TABLE_NAME IN ('cliente', 'fornecedor') THEN
+        IF NEW.email IS NOT NULL THEN
+            NEW.email := lower(NEW.email);
+            IF valor_antigo_email != NEW.email THEN
+                alteracoes := alteracoes || 'Email: "' || valor_antigo_email || '" → "' || NEW.email || '" | ';
+            END IF;
+        END IF;
+    END IF;
+
+    -- Padroniza o campo telefone: remove espaços e caracteres especiais
+    IF NEW.telefone IS NOT NULL THEN
+        NEW.telefone := regexp_replace(NEW.telefone, '[^0-9-]', '', 'g');
+        IF valor_antigo_telefone != NEW.telefone THEN
+            alteracoes := alteracoes || 'Telefone: "' || valor_antigo_telefone || '" → "' || NEW.telefone || '" | ';
+        END IF;
+    END IF;
+
+    -- Padroniza o campo CEP: remove espaços e caracteres especiais
+	IF TG_TABLE_NAME IN ('cliente', 'funcionario') THEN
+	    IF NEW.cep IS NOT NULL THEN
+	        NEW.cep := regexp_replace(NEW.cep, '[^0-9-]', '', 'g');
+	        IF valor_antigo_cep != NEW.cep THEN
+	            alteracoes := alteracoes || 'CEP: "' || valor_antigo_cep || '" → "' || NEW.cep || '" | ';
+	        END IF;
+	    END IF;
+	END IF;
+    -- Exibe mensagem informativa se houve alterações
+    IF alteracoes != '' THEN
+        RAISE NOTICE 'Padronização realizada na tabela %: %', TG_TABLE_NAME, rtrim(alteracoes, ' |');
     END IF;
 
     RETURN NEW;
@@ -226,19 +350,19 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Trigger para CLIENTE
-CREATE TRIGGER trg_padronizar_texto_cliente
+CREATE OR REPLACE TRIGGER trg_padronizar_texto_cliente
 BEFORE INSERT OR UPDATE ON cliente
 FOR EACH ROW
 EXECUTE FUNCTION padronizar_texto_campos();
 
 -- Trigger para FUNCIONARIO
-CREATE TRIGGER trg_padronizar_texto_funcionario
+CREATE OR REPLACE TRIGGER trg_padronizar_texto_funcionario
 BEFORE INSERT OR UPDATE ON funcionario
 FOR EACH ROW
 EXECUTE FUNCTION padronizar_texto_campos();
 
 -- Trigger para FORNECEDOR
-CREATE TRIGGER trg_padronizar_texto_fornecedor
+CREATE OR REPLACE TRIGGER trg_padronizar_texto_fornecedor
 BEFORE INSERT OR UPDATE ON fornecedor
 FOR EACH ROW
 EXECUTE FUNCTION padronizar_texto_campos();
@@ -345,8 +469,6 @@ FOR EACH ROW
 EXECUTE FUNCTION fn_auditoria_geral_update();
 
 
--- Repita a criação do trigger acima para cada tabela que deseja auditar,
--- substituindo "funcionario" pelo nome da tabela correspondente.
 
 
 

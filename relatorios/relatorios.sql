@@ -72,13 +72,13 @@ $$ LANGUAGE plpgsql;
 -- Relatório 6: Analise de vendas por tipo de midia
 CREATE OR REPLACE VIEW v_rel_analise_vendas_tipo_midia AS
 SELECT
-    tm.nome AS tipo_midia,
+    tm.nome_formato AS tipo_midia,
     SUM(iv.qtd_item) AS itens_vendidos,
     SUM(iv.subtotal) AS total_vendas
 FROM tipo_midia tm
 JOIN midia m ON tm.cod_tipo_midia = m.cod_tipo_midia
 JOIN item_venda iv ON m.cod_midia = iv.cod_midia
-GROUP BY tm.nome
+GROUP BY tm.nome_formato
 ORDER BY total_vendas DESC;
 
 -- Relatório 7: Analise de vendas por categoria

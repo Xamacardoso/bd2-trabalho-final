@@ -1,20 +1,4 @@
--- Teste 1: Cadastrar novos registros
--- Cadastrar um novo funcionário
--- Verificar se foram inseridos
--- Teste 2: Alterar registros
--- Alterar dados do cliente
--- Alterar salário do funcionário
--- Verificar alterações
--- Teste 4: Remover registros sem dependências
--- Remover os registros de teste criados
--- Verificar se foram removidos
--- Teste 5: Testar com tabelas diferentes
--- Cadastrar nova categoria
--- Cadastrar novo tipo de mídia
--- Alterar categoria
--- Remover registros de teste
-
--- Teste 3: Tentar remover registros com integridade referencial
+-- Teste 1: Tentar remover registros com integridade referencial
 
 -- Tentar remover um fornecedor que tem compras (deve falhar)
 BEGIN;
@@ -42,13 +26,13 @@ ROLLBACK;
 
 -- Teste 6: Verificar funções auxiliares básicas
 -- Verificar se tabela existe
-SELECT tabela_existe('cliente') as existe;
+SELECT tabela_existe('balatro') as existe;
 
 -- Verificar colunas da tabela cliente
 SELECT unnest(colunas_da_tabela('cliente')) as coluna;
 
 -- Verificar se colunas existem
-SELECT colunas_existem('cliente', 'nome, telefone') as existem;
+SELECT colunas_existem('cliente', 'balatro, telefone') as existem;
 
 -- =====================
 -- Testes de TRIGGERS
@@ -67,11 +51,12 @@ DO $$
 BEGIN
     INSERT INTO funcionario (nome, telefone, cep, salario) VALUES ('Bruce Wayne', '9999-9999', '64000-999', -100.00);
 EXCEPTION WHEN OTHERS THEN
-    RAISE NOTICE 'Erro esperado: %', SQLERRM;
+    RAISE EXCEPTION 'Erro esperado: %', SQLERRM;
 END;$$;
 ROLLBACK;
 
 -- Teste 7.3: Inserção com salário nulo (deve falhar)
+
 BEGIN;
 DO $$
 BEGIN
@@ -87,6 +72,7 @@ INSERT INTO titulo (nome, classificacao_ind, ano_lancamento) VALUES ('Star Wars'
 ROLLBACK;
 
 -- Teste 7.5: Inserção com ano_lancamento negativo (deve falhar)
+
 BEGIN;
 DO $$
 BEGIN
@@ -148,14 +134,14 @@ ROLLBACK;
 
 -- Teste 7.12: Inserção válida em venda
 BEGIN;
-INSERT INTO venda (cod_funcionario, cod_cliente, dt_hora_venda, total) VALUES (1, 1, now(), 50.00);
+INSERT INTO venda (cod_funcionario, cod_cliente, dt_hora_venda, total) VALUES (9, 1, now(), 50.00);
 ROLLBACK;
 
 -- Teste 7.13: Inserção com total nulo em venda (deve falhar)
 BEGIN;
 DO $$
 BEGIN
-    INSERT INTO venda (cod_funcionario, cod_cliente, dt_hora_venda, total) VALUES (1, 1, now(), NULL);
+    INSERT INTO venda (cod_funcionario, cod_cliente, dt_hora_venda, total) VALUES (1, 9, now(), NULL);
 EXCEPTION WHEN OTHERS THEN
     RAISE NOTICE 'Erro esperado: %', SQLERRM;
 END;$$;
@@ -169,9 +155,9 @@ ROLLBACK;
 
 -- Teste 7.15: Atualização de nome e email (deve padronizar)
 BEGIN;
-INSERT INTO funcionario (nome, telefone, cep, salario) VALUES ('Peter Parker', '1111-2222', '64000-001', 2000.00);
-UPDATE funcionario SET nome = 'PETER PARKER', email = 'SPIDEY@MARVEL.COM' WHERE nome = 'Peter Parker';
-SELECT nome, email FROM funcionario WHERE nome = 'Peter Parker';
+INSERT INTO cliente (nome, telefone, email, cep) VALUES ('Peter Parker', '1111-2222', 'euiglesio@gmail.com', '65636-774');
+UPDATE cliente SET nome = 'PETER PARKER', email = 'SPIDEY@MARVEL.COM' WHERE nome = 'Peter Parker';
+SELECT nome, email, cep FROM cliente WHERE nome = 'Peter Parker';
 ROLLBACK;
 
 -- Teste 7.16: Auditoria de UPDATE
@@ -184,7 +170,7 @@ ROLLBACK;
 -- Teste 7.17: Atualização de estoque após venda
 BEGIN;
 INSERT INTO midia (valor_unid, qtd_estoque, cod_tipo_midia, cod_titulo) VALUES (20.00, 10, 1, 1);
-INSERT INTO venda (cod_funcionario, cod_cliente, dt_hora_venda, total) VALUES (1, 1, now(), 0);
+INSERT INTO venda (cod_funcionario, cod_cliente, dt_hora_venda, total) VALUES (9, 1, now(), 0);
 INSERT INTO item_venda (cod_midia, cod_venda, subtotal, qtd_item) VALUES (currval('midia_cod_midia_seq'), currval('venda_cod_venda_seq'), 40.00, 2);
 SELECT qtd_estoque FROM midia WHERE cod_midia = currval('midia_cod_midia_seq');
 ROLLBACK;
@@ -197,7 +183,7 @@ DECLARE
     v_cod_venda int;
 BEGIN
     INSERT INTO midia (valor_unid, qtd_estoque, cod_tipo_midia, cod_titulo) VALUES (30.00, 1, 1, 1) RETURNING cod_midia INTO v_cod_midia;
-    INSERT INTO venda (cod_funcionario, cod_cliente, dt_hora_venda, total) VALUES (1, 1, now(), 0) RETURNING cod_venda INTO v_cod_venda;
+    INSERT INTO venda (cod_funcionario, cod_cliente, dt_hora_venda, total) VALUES (9, 1, now(), 0) RETURNING cod_venda INTO v_cod_venda;
     BEGIN
         INSERT INTO item_venda (cod_midia, cod_venda, subtotal, qtd_item) VALUES (v_cod_midia, v_cod_venda, 60.00, 2);
     EXCEPTION WHEN OTHERS THEN
@@ -209,7 +195,7 @@ ROLLBACK;
 -- Teste 7.19: Devolução de estoque após exclusão de item_venda
 BEGIN;
 INSERT INTO midia (valor_unid, qtd_estoque, cod_tipo_midia, cod_titulo) VALUES (40.00, 5, 1, 1);
-INSERT INTO venda (cod_funcionario, cod_cliente, dt_hora_venda, total) VALUES (1, 1, now(), 0);
+INSERT INTO venda (cod_funcionario, cod_cliente, dt_hora_venda, total) VALUES (9, 1, now(), 0);
 INSERT INTO item_venda (cod_midia, cod_venda, subtotal, qtd_item) VALUES (currval('midia_cod_midia_seq'), currval('venda_cod_venda_seq'), 80.00, 2);
 DELETE FROM item_venda WHERE cod_midia = currval('midia_cod_midia_seq') AND cod_venda = currval('venda_cod_venda_seq');
 SELECT qtd_estoque FROM midia WHERE cod_midia = currval('midia_cod_midia_seq');
@@ -223,6 +209,11 @@ INSERT INTO item_compra (cod_compra, cod_midia, quantidade, subtotal) VALUES (cu
 SELECT qtd_estoque FROM midia WHERE cod_midia = currval('midia_cod_midia_seq');
 ROLLBACK;
 
+SELECT * FROM COMPRA ORDER BY cod_compra DESC;
+
+SELECT * FROM midia ORDER BY cod_midia desc;
+
+SELECT * FROM item_compra ORDER BY cod_compra DESC;
 -- ========================================
 -- TESTES DAS FUNÇÕES COM JSON
 -- ========================================
