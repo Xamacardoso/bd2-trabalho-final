@@ -39,6 +39,7 @@ SELECT f_cadastrar_json('cliente', '{"nome": "Luciana Dias", "telefone": "9999-7
 SELECT f_cadastrar_json('cliente', '{"nome": "Bruno Costa", "telefone": "5555-6666", "email": "bruno@email.com", "cep": "64004-000"}');
 SELECT f_cadastrar_json('cliente', '{"nome": "Fernanda Lima", "telefone": "4444-5555", "email": "fernanda@email.com", "cep": "64005-000"}');
 
+
 -- Cadastro de funcionários
 SELECT f_cadastrar_json('funcionario', '{"nome": "Carlos Lima", "telefone": "7777-7777", "cep": "64002-000", "salario": 2500.00}');
 SELECT f_cadastrar_json('funcionario', '{"nome": "Ana Paula", "telefone": "6666-6666", "cep": "64003-000", "salario": 3200.00}');

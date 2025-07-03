@@ -299,7 +299,9 @@ DECLARE
 BEGIN
     -- Armazena valores antigos para comparação
     valor_antigo_nome := NEW.nome;
-    valor_antigo_email := NEW.email;
+	IF TG_TABLE_NAME IN ('cliente', 'fornecedor') THEN
+    	valor_antigo_email := NEW.email;
+	END IF;
     valor_antigo_telefone := NEW.telefone;
 	IF TG_TABLE_NAME IN ('cliente', 'funcionario') THEN
     	valor_antigo_cep := NEW.cep;

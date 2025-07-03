@@ -221,11 +221,15 @@ SELECT * FROM item_compra ORDER BY cod_compra DESC;
 -- Teste 8.1: Cadastrar cliente usando JSON
 SELECT f_cadastrar_json('cliente', '{"nome": "Han Solo", "telefone": "9999-8888", "email": "han@falcon.com", "cep": "64000-001"}');
 
+SELECT * FROM cliente;
 -- Teste 8.2: Cadastrar funcionário usando JSON
 SELECT f_cadastrar_json('funcionario', '{"nome": "Chewbacca", "telefone": "7777-6666", "cep": "64000-002", "salario": 3500.00}');
 
+SELECT * FROM funcionario;
 -- Teste 8.3: Cadastrar categoria usando JSON
 SELECT f_cadastrar_json('categoria', '{"nome": "Sci-Fi"}');
+
+SELECT * FROM categoria;
 
 -- Teste 8.4: Verificar se foram inseridos
 SELECT * FROM cliente WHERE nome = 'Han Solo';

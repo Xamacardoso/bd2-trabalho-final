@@ -192,13 +192,22 @@ CREATE OR REPLACE FUNCTION f_cadastrar_json(
 )
 RETURNS void AS $$
 DECLARE
-    colunas text[];
-    valores text[];
-    coluna text;
-    valor text;
-    comando text;
-    i integer := 0;
-    tipo_coluna text;
+    colunas_v text[];
+    valores_v text[];
+    coluna_v text;
+    valor_v text;
+    comando_v text;
+    i_v integer := 0;
+    tipo_coluna_v text;
+    cod_cliente_v int;
+    cod_funcionario_v int;
+    cod_fornecedor_v int;
+    cod_titulo_v int;
+    cod_tipo_midia_v int;
+    cod_categoria_v int;
+    cod_midia_v int;
+    cod_compra_v int;
+    cod_venda_v int;
 BEGIN
     -- Verifica se a tabela existe
     IF NOT tabela_existe(nome_tabela) THEN
@@ -206,37 +215,114 @@ BEGIN
     END IF;
 
     -- Extrai colunas e valores do JSON
-    FOR coluna, valor IN SELECT * FROM json_each_text(dados)
+    FOR coluna_v, valor_v IN SELECT * FROM json_each_text(dados)
     LOOP
-        i := i + 1;
-        colunas[i] := coluna;
+        i_v := i_v + 1;
+        colunas_v[i_v] := coluna_v;
         
         -- Verifica o tipo da coluna para formatar o valor adequadamente
-        SELECT data_type INTO tipo_coluna 
+        SELECT data_type INTO tipo_coluna_v 
         FROM information_schema.columns 
-        WHERE table_name = nome_tabela AND column_name = coluna;
+        WHERE table_name = nome_tabela AND column_name = coluna_v;
         
-        -- Formata o valor baseado no tipo da coluna
-        IF tipo_coluna IN ('character varying', 'text', 'date', 'timestamp', 'timestamp without time zone') THEN
-            -- Para strings, datas e timestamps, adiciona aspas simples
-            valores[i] := quote_literal(valor);
+        -- Tratamento especial para campos que usam nomes em vez de códigos
+        IF coluna_v = 'nome_cliente' THEN
+            -- Busca o código do cliente pelo nome (aplicando formatação)
+            SELECT cod_cliente INTO cod_cliente_v FROM cliente WHERE nome = initcap(valor_v);
+            IF cod_cliente_v IS NULL THEN
+                RAISE EXCEPTION 'Cliente com nome "%" não encontrado!', valor_v;
+            END IF;
+            valores_v[i_v] := cod_cliente_v::text;
+            colunas_v[i_v] := 'cod_cliente';
+            
+        ELSIF coluna_v = 'nome_funcionario' THEN
+            -- Busca o código do funcionário pelo nome (aplicando formatação)
+            SELECT cod_funcionario INTO cod_funcionario_v FROM funcionario WHERE nome = initcap(valor_v);
+            IF cod_funcionario_v IS NULL THEN
+                RAISE EXCEPTION 'Funcionário com nome "%" não encontrado!', valor_v;
+            END IF;
+            valores_v[i_v] := cod_funcionario_v::text;
+            colunas_v[i_v] := 'cod_funcionario';
+            
+        ELSIF coluna_v = 'nome_fornecedor' THEN
+            -- Busca o código do fornecedor pelo nome (aplicando formatação)
+            SELECT cod_fornecedor INTO cod_fornecedor_v FROM fornecedor WHERE nome = initcap(valor_v);
+            IF cod_fornecedor_v IS NULL THEN
+                RAISE EXCEPTION 'Fornecedor com nome "%" não encontrado!', valor_v;
+            END IF;
+            valores_v[i_v] := cod_fornecedor_v::text;
+            colunas_v[i_v] := 'cod_fornecedor';
+            
+        ELSIF coluna_v = 'nome_titulo' THEN
+            -- Busca o código do título pelo nome (aplicando formatação)
+            SELECT cod_titulo INTO cod_titulo_v FROM titulo WHERE nome = initcap(valor_v);
+            IF cod_titulo_v IS NULL THEN
+                RAISE EXCEPTION 'Título com nome "%" não encontrado!', valor_v;
+            END IF;
+            valores_v[i_v] := cod_titulo_v::text;
+            colunas_v[i_v] := 'cod_titulo';
+            
+        ELSIF coluna_v = 'nome_tipo_midia' THEN
+            -- Busca o código do tipo de mídia pelo nome (aplicando formatação)
+            SELECT cod_tipo_midia INTO cod_tipo_midia_v FROM tipo_midia WHERE nome_formato = valor_v;
+            IF cod_tipo_midia_v IS NULL THEN
+                RAISE EXCEPTION 'Tipo de mídia com nome "%" não encontrado!', valor_v;
+            END IF;
+            valores_v[i_v] := cod_tipo_midia_v::text;
+            colunas_v[i_v] := 'cod_tipo_midia';
+            
+        ELSIF coluna_v = 'nome_categoria' THEN
+            -- Busca o código da categoria pelo nome (aplicando formatação)
+            SELECT cod_categoria INTO cod_categoria_v FROM categoria WHERE nome = initcap(valor_v);
+            IF cod_categoria_v IS NULL THEN
+                RAISE EXCEPTION 'Categoria com nome "%" não encontrada!', valor_v;
+            END IF;
+            valores_v[i_v] := cod_categoria_v::text;
+            colunas_v[i_v] := 'cod_categoria';
+            
+        ELSIF coluna_v = 'nome_midia' THEN
+            -- Busca o código da mídia pelo título (aplicando formatação)
+            SELECT m.cod_midia INTO cod_midia_v 
+            FROM midia m 
+            JOIN titulo t ON m.cod_titulo = t.cod_titulo 
+            WHERE t.nome = initcap(valor_v);
+            IF cod_midia_v IS NULL THEN
+                RAISE EXCEPTION 'Mídia com título "%" não encontrada!', valor_v;
+            END IF;
+            valores_v[i_v] := cod_midia_v::text;
+            colunas_v[i_v] := 'cod_midia';
+            
+        ELSIF coluna_v = 'cod_compra' AND valor_v ~ '^[0-9]+$' THEN
+            -- Se for um número, mantém como está
+            valores_v[i_v] := valor_v;
+            
+        ELSIF coluna_v = 'cod_venda' AND valor_v ~ '^[0-9]+$' THEN
+            -- Se for um número, mantém como está
+            valores_v[i_v] := valor_v;
+            
         ELSE
-            -- Para números e outros tipos, usa o valor diretamente
-            valores[i] := valor;
+            -- Formata o valor baseado no tipo da coluna
+            IF tipo_coluna_v IN ('character varying', 'text', 'date', 'timestamp', 'timestamp without time zone') THEN
+                -- Para strings, datas e timestamps, adiciona aspas simples
+                valores_v[i_v] := quote_literal(valor_v);
+            ELSE
+                -- Para números e outros tipos, usa o valor diretamente
+                valores_v[i_v] := valor_v;
+            END IF;
         END IF;
     END LOOP;
 
     -- Verifica se as colunas existem
-    IF NOT colunas_existem(nome_tabela, array_to_string(colunas, ',')) THEN
+    IF NOT colunas_existem(nome_tabela, array_to_string(colunas_v, ',')) THEN
         RAISE EXCEPTION 'Uma ou mais colunas não existem na tabela %!', nome_tabela;
     END IF;
 
     -- Monta e executa o INSERT
-    comando := format('INSERT INTO %I (%s) VALUES (%s)', 
+    comando_v := format('INSERT INTO %I (%s) VALUES (%s)', 
                      nome_tabela, 
-                     array_to_string(colunas, ','), 
-                     array_to_string(valores, ','));
-    EXECUTE comando;
+                     array_to_string(colunas_v, ','), 
+                     array_to_string(valores_v, ','));
+    EXECUTE comando_v;
 
     RAISE INFO 'Registro incluído com sucesso na tabela %!', nome_tabela;
 END;
