@@ -469,10 +469,3 @@ CREATE TRIGGER trg_auditoria_midia_update
 AFTER UPDATE ON midia
 FOR EACH ROW
 EXECUTE FUNCTION fn_auditoria_geral_update();
-
-
-
-
-
-
-
