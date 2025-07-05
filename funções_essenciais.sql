@@ -192,7 +192,7 @@ BEGIN
         END IF;
     END LOOP;
 
-    -- AUTOMATIZAÇÃO DE TIMESTAMP PARA VENDAS E COMPRAS
+    -- AUTOMATIZAÇÃO DE TIMESTAMP E TOTAL PARA VENDAS E COMPRAS
     -- Adiciona campos de timestamp automaticamente se não fornecidos
     IF nome_tabela = 'venda' AND NOT ('dt_hora_venda' = ANY(colunas_v)) THEN
         i_v := i_v + 1;
@@ -207,6 +207,15 @@ BEGIN
         valores_v[i_v] := 'CURRENT_TIMESTAMP';
         RAISE INFO 'Campo dt_compra adicionado automaticamente com CURRENT_TIMESTAMP';
     END IF;
+    
+    -- AUTOMATIZAÇÃO DO CAMPO TOTAL PARA VENDAS
+    -- Inicializa total com 0 para que os triggers calculem o valor real
+    IF nome_tabela = 'venda' AND NOT ('total' = ANY(colunas_v)) THEN
+        i_v := i_v + 1;
+        colunas_v[i_v] := 'total';
+        valores_v[i_v] := '0';
+        RAISE INFO 'Campo total inicializado automaticamente com 0 (será calculado pelos triggers)';
+    END IF;
 
     -- Verifica se as colunas existem (apenas as colunas originais do JSON)
     -- Não inclui os campos automáticos na verificação para evitar erro
@@ -214,8 +223,10 @@ BEGIN
         SELECT unnest(colunas_v) 
         WHERE unnest != 'dt_hora_venda' 
         AND unnest != 'dt_compra'
+        AND unnest != 'total'
         OR (unnest = 'dt_hora_venda' AND nome_tabela = 'venda')
         OR (unnest = 'dt_compra' AND nome_tabela = 'compra')
+        OR (unnest = 'total' AND nome_tabela = 'venda')
     );
     
     IF NOT colunas_existem(nome_tabela, array_to_string(colunas_para_verificar, ',')) THEN
@@ -386,5 +397,41 @@ BEGIN
     EXECUTE comando;
 
     RAISE INFO 'Registro(s) removido(s) com sucesso da tabela %!', nome_tabela;
+END;
+$$ LANGUAGE plpgsql;
+
+-- ========================================
+-- FUNÇÃO UNIVERSAL PARA OPERAÇÕES JSON
+-- ========================================
+
+CREATE OR REPLACE FUNCTION f_operacao_json(
+    operacao text,
+    nome_tabela text,
+    dados json,
+    condicao text DEFAULT NULL
+)
+RETURNS void AS $$
+BEGIN
+    -- Verifica se a tabela existe
+    IF NOT tabela_existe(nome_tabela) THEN
+        RAISE EXCEPTION 'A tabela % não existe!', nome_tabela;
+    END IF;
+
+    -- Executa a operação baseada no parâmetro
+    CASE operacao
+        WHEN 'INSERT' THEN
+            PERFORM f_cadastrar_json(nome_tabela, dados);
+        WHEN 'UPDATE' THEN
+            IF condicao IS NULL THEN
+                RAISE EXCEPTION 'Condição obrigatória para operação UPDATE!';
+            END IF;
+            PERFORM f_alterar_json(nome_tabela, dados, condicao);
+        WHEN 'DELETE' THEN
+            PERFORM f_remover_json(nome_tabela, dados);
+        ELSE
+            RAISE EXCEPTION 'Operação "%" não suportada! Use INSERT, UPDATE ou DELETE.', operacao;
+    END CASE;
+
+    RAISE INFO 'Operação % executada com sucesso na tabela %!', operacao, nome_tabela;
 END;
 $$ LANGUAGE plpgsql;

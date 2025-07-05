@@ -169,5 +169,3 @@ END $$;
 SET ROLE role_gerente;
 SET ROLE role_cliente;
 RESET ROLE;
-
-INSERT INTO categoria VALUES(80, 'blublua');

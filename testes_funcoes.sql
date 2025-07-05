@@ -134,14 +134,14 @@ ROLLBACK;
 
 -- Teste 7.12: Inserção válida em venda
 BEGIN;
-INSERT INTO venda (cod_funcionario, cod_cliente, dt_hora_venda, total) VALUES (9, 1, now(), 50.00);
+INSERT INTO venda (cod_funcionario, cod_cliente, dt_hora_venda, total) VALUES (1, 1, now(), 50.00);
 ROLLBACK;
 
 -- Teste 7.13: Inserção com total nulo em venda (deve falhar)
 BEGIN;
 DO $$
 BEGIN
-    INSERT INTO venda (cod_funcionario, cod_cliente, dt_hora_venda, total) VALUES (1, 9, now(), NULL);
+    INSERT INTO venda (cod_funcionario, cod_cliente, dt_hora_venda, total) VALUES (1, 1, now(), NULL);
 EXCEPTION WHEN OTHERS THEN
     RAISE NOTICE 'Erro esperado: %', SQLERRM;
 END;$$;
@@ -170,7 +170,7 @@ ROLLBACK;
 -- Teste 7.17: Atualização de estoque após venda
 BEGIN;
 INSERT INTO midia (valor_unid, qtd_estoque, cod_tipo_midia, cod_titulo) VALUES (20.00, 10, 1, 1);
-INSERT INTO venda (cod_funcionario, cod_cliente, dt_hora_venda, total) VALUES (9, 1, now(), 0);
+INSERT INTO venda (cod_funcionario, cod_cliente, dt_hora_venda, total) VALUES (1, 1, now(), 0);
 INSERT INTO item_venda (cod_midia, cod_venda, subtotal, qtd_item) VALUES (currval('midia_cod_midia_seq'), currval('venda_cod_venda_seq'), 40.00, 2);
 SELECT qtd_estoque FROM midia WHERE cod_midia = currval('midia_cod_midia_seq');
 ROLLBACK;
@@ -183,7 +183,7 @@ DECLARE
     v_cod_venda int;
 BEGIN
     INSERT INTO midia (valor_unid, qtd_estoque, cod_tipo_midia, cod_titulo) VALUES (30.00, 1, 1, 1) RETURNING cod_midia INTO v_cod_midia;
-    INSERT INTO venda (cod_funcionario, cod_cliente, dt_hora_venda, total) VALUES (9, 1, now(), 0) RETURNING cod_venda INTO v_cod_venda;
+    INSERT INTO venda (cod_funcionario, cod_cliente, dt_hora_venda, total) VALUES (1, 1, now(), 0) RETURNING cod_venda INTO v_cod_venda;
     BEGIN
         INSERT INTO item_venda (cod_midia, cod_venda, subtotal, qtd_item) VALUES (v_cod_midia, v_cod_venda, 60.00, 2);
     EXCEPTION WHEN OTHERS THEN
@@ -195,7 +195,7 @@ ROLLBACK;
 -- Teste 7.19: Devolução de estoque após exclusão de item_venda
 BEGIN;
 INSERT INTO midia (valor_unid, qtd_estoque, cod_tipo_midia, cod_titulo) VALUES (40.00, 5, 1, 1);
-INSERT INTO venda (cod_funcionario, cod_cliente, dt_hora_venda, total) VALUES (9, 1, now(), 0);
+INSERT INTO venda (cod_funcionario, cod_cliente, dt_hora_venda, total) VALUES (1, 1, now(), 0);
 INSERT INTO item_venda (cod_midia, cod_venda, subtotal, qtd_item) VALUES (currval('midia_cod_midia_seq'), currval('venda_cod_venda_seq'), 80.00, 2);
 DELETE FROM item_venda WHERE cod_midia = currval('midia_cod_midia_seq') AND cod_venda = currval('venda_cod_venda_seq');
 SELECT qtd_estoque FROM midia WHERE cod_midia = currval('midia_cod_midia_seq');

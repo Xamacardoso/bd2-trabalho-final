@@ -22,8 +22,9 @@ BEGIN
     FROM titulo t
     JOIN midia m ON t.cod_titulo = m.cod_titulo
     JOIN item_venda iv ON m.cod_midia = iv.cod_midia
-    WHERE EXTRACT(MONTH FROM iv.dt_hora_venda) = mes
-    AND EXTRACT(YEAR FROM iv.dt_hora_venda) = ano
+    JOIN venda v ON iv.cod_venda = v.cod_venda
+    WHERE EXTRACT(MONTH FROM v.dt_hora_venda) = mes
+    AND EXTRACT(YEAR FROM v.dt_hora_venda) = ano
     GROUP BY t.nome
     ORDER BY total_vendido DESC
     LIMIT qtd_exibir;

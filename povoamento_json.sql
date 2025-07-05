@@ -102,61 +102,75 @@ SELECT f_cadastrar_json('midia', '{"valor_unid": 45.00, "qtd_estoque": 10, "cod_
 
 SELECT * FROM midia;
 
--- Cadastro de vendas (com timestamp automático)
-SELECT f_cadastrar_json('venda', '{"nome_funcionario": "Carlos Lima", "nome_cliente": "João Silva", "total": 70.00}');
-SELECT f_cadastrar_json('venda', '{"nome_funcionario": "Ana Paula", "nome_cliente": "Maria Souza", "total": 95.00}');
-SELECT f_cadastrar_json('venda', '{"nome_funcionario": "Marcos Silva", "nome_cliente": "Pedro Alves", "total": 120.00}');
-SELECT f_cadastrar_json('venda', '{"nome_funcionario": "Patricia Souza", "nome_cliente": "Luciana Dias", "total": 85.00}');
-SELECT f_cadastrar_json('venda', '{"nome_funcionario": "Rafael Torres", "nome_cliente": "Bruno Costa", "total": 135.00}');
-SELECT f_cadastrar_json('venda', '{"nome_funcionario": "Juliana Rocha", "nome_cliente": "Fernanda Lima", "total": 200.00}');
+-- Cadastro de vendas (com timestamp e total automáticos)
+SELECT f_cadastrar_json('venda', '{"nome_funcionario": "Carlos Lima", "nome_cliente": "João Silva"}');
+SELECT f_cadastrar_json('venda', '{"nome_funcionario": "Ana Paula", "nome_cliente": "Maria Souza"}');
+SELECT f_cadastrar_json('venda', '{"nome_funcionario": "Marcos Silva", "nome_cliente": "Pedro Alves"}');
+SELECT f_cadastrar_json('venda', '{"nome_funcionario": "Patricia Souza", "nome_cliente": "Luciana Dias"}');
+SELECT f_cadastrar_json('venda', '{"nome_funcionario": "Rafael Torres", "nome_cliente": "Bruno Costa"}');
+SELECT f_cadastrar_json('venda', '{"nome_funcionario": "Juliana Rocha", "nome_cliente": "Fernanda Lima"}');
 
 SELECT * FROM venda
 
--- ========================= RELACIONAMENTOS =========================
+-- ========================= RELACIONAMENTOS USANDO f_cadastrar_json =========================
 
--- Relacionamentos título-categoria (usando INSERT direto pois são chaves compostas)
-INSERT INTO titulo_categoria (cod_categoria, cod_titulo) VALUES
-  (1, 1), -- O Poderoso Chefão - Ação
-  (3, 1), -- O Poderoso Chefão - Drama
-  (1, 2), -- Pulp Fiction - Ação
-  (2, 2), -- Pulp Fiction - Comédia
-  (3, 3), -- Forrest Gump - Drama
-  (6, 3), -- Forrest Gump - Romance
-  (7, 4), -- Matrix - Ficção Científica
-  (1, 4), -- Matrix - Ação
-  (6, 5), -- Titanic - Romance
-  (3, 5), -- Titanic - Drama
-  (8, 6), -- Senhor dos Anéis - Aventura
-  (7, 6), -- Senhor dos Anéis - Ficção Científica
-  (7, 7), -- Interestelar - Ficção Científica
-  (3, 7), -- Interestelar - Drama
-  (1, 8), -- Vingadores - Ação
-  (8, 8), -- Vingadores - Aventura
-  (10, 9), -- Rei Leão - Animação
-  (8, 9), -- Rei Leão - Aventura
-  (8, 10), -- Jurassic Park - Aventura
-  (7, 10), -- Jurassic Park - Ficção Científica
-  (9, 11), -- Silêncio dos Inocentes - Suspense
-  (3, 11), -- Silêncio dos Inocentes - Drama
-  (9, 12), -- Clube da Luta - Suspense
-  (1, 12), -- Clube da Luta - Ação
-  (1, 13), -- Resgate do Soldado Ryan - Ação
-  (3, 13), -- Resgate do Soldado Ryan - Drama
-  (1, 14), -- Os Bons Companheiros - Ação
-  (3, 14), -- Os Bons Companheiros - Drama
-  (3, 15), -- Um Sonho de Liberdade - Drama
-  (9, 15); -- Um Sonho de Liberdade - Suspense
+-- Relacionamentos título-categoria (usando f_cadastrar_json com nomes)
+SELECT f_cadastrar_json('titulo_categoria', '{"nome_categoria": "Ação", "nome_titulo": "O Poderoso Chefão"}');
+SELECT f_cadastrar_json('titulo_categoria', '{"nome_categoria": "Drama", "nome_titulo": "O Poderoso Chefão"}');
+SELECT f_cadastrar_json('titulo_categoria', '{"nome_categoria": "Ação", "nome_titulo": "Pulp Fiction"}');
+SELECT f_cadastrar_json('titulo_categoria', '{"nome_categoria": "Comédia", "nome_titulo": "Pulp Fiction"}');
+SELECT f_cadastrar_json('titulo_categoria', '{"nome_categoria": "Drama", "nome_titulo": "Forrest Gump"}');
+SELECT f_cadastrar_json('titulo_categoria', '{"nome_categoria": "Romance", "nome_titulo": "Forrest Gump"}');
+SELECT f_cadastrar_json('titulo_categoria', '{"nome_categoria": "Ficção Científica", "nome_titulo": "Matrix"}');
+SELECT f_cadastrar_json('titulo_categoria', '{"nome_categoria": "Ação", "nome_titulo": "Matrix"}');
+SELECT f_cadastrar_json('titulo_categoria', '{"nome_categoria": "Romance", "nome_titulo": "Titanic"}');
+SELECT f_cadastrar_json('titulo_categoria', '{"nome_categoria": "Drama", "nome_titulo": "Titanic"}');
+SELECT f_cadastrar_json('titulo_categoria', '{"nome_categoria": "Aventura", "nome_titulo": "O Senhor dos Anéis: A Sociedade do Anel"}');
+SELECT f_cadastrar_json('titulo_categoria', '{"nome_categoria": "Ficção Científica", "nome_titulo": "O Senhor dos Anéis: A Sociedade do Anel"}');
+SELECT f_cadastrar_json('titulo_categoria', '{"nome_categoria": "Ficção Científica", "nome_titulo": "Interestelar"}');
+SELECT f_cadastrar_json('titulo_categoria', '{"nome_categoria": "Drama", "nome_titulo": "Interestelar"}');
+SELECT f_cadastrar_json('titulo_categoria', '{"nome_categoria": "Ação", "nome_titulo": "Vingadores: Ultimato"}');
+SELECT f_cadastrar_json('titulo_categoria', '{"nome_categoria": "Aventura", "nome_titulo": "Vingadores: Ultimato"}');
+SELECT f_cadastrar_json('titulo_categoria', '{"nome_categoria": "Animação", "nome_titulo": "O Rei Leão"}');
+SELECT f_cadastrar_json('titulo_categoria', '{"nome_categoria": "Aventura", "nome_titulo": "O Rei Leão"}');
+SELECT f_cadastrar_json('titulo_categoria', '{"nome_categoria": "Aventura", "nome_titulo": "Jurassic Park"}');
+SELECT f_cadastrar_json('titulo_categoria', '{"nome_categoria": "Ficção Científica", "nome_titulo": "Jurassic Park"}');
+SELECT f_cadastrar_json('titulo_categoria', '{"nome_categoria": "Suspense", "nome_titulo": "O Silêncio dos Inocentes"}');
+SELECT f_cadastrar_json('titulo_categoria', '{"nome_categoria": "Drama", "nome_titulo": "O Silêncio dos Inocentes"}');
+SELECT f_cadastrar_json('titulo_categoria', '{"nome_categoria": "Suspense", "nome_titulo": "Clube da Luta"}');
+SELECT f_cadastrar_json('titulo_categoria', '{"nome_categoria": "Ação", "nome_titulo": "Clube da Luta"}');
+SELECT f_cadastrar_json('titulo_categoria', '{"nome_categoria": "Ação", "nome_titulo": "O Resgate do Soldado Ryan"}');
+SELECT f_cadastrar_json('titulo_categoria', '{"nome_categoria": "Drama", "nome_titulo": "O Resgate do Soldado Ryan"}');
+SELECT f_cadastrar_json('titulo_categoria', '{"nome_categoria": "Ação", "nome_titulo": "Os Bons Companheiros"}');
+SELECT f_cadastrar_json('titulo_categoria', '{"nome_categoria": "Drama", "nome_titulo": "Os Bons Companheiros"}');
+SELECT f_cadastrar_json('titulo_categoria', '{"nome_categoria": "Drama", "nome_titulo": "Um Sonho de Liberdade"}');
+SELECT f_cadastrar_json('titulo_categoria', '{"nome_categoria": "Suspense", "nome_titulo": "Um Sonho de Liberdade"}');
 
--- Itens de compra (usando INSERT direto pois são chaves compostas)
-INSERT INTO item_compra (cod_compra, cod_midia, quantidade, subtotal) VALUES
-  (1, 1, 10, 250.00), (1, 3, 8, 240.00), (2, 5, 15, 300.00), (2, 7, 12, 420.00),
-  (3, 9, 20, 500.00), (3, 11, 10, 300.00), (4, 13, 8, 320.00), (4, 15, 6, 390.00),
-  (5, 17, 25, 500.00), (5, 19, 12, 300.00), (6, 2, 5, 225.00), (6, 4, 4, 200.00);
+-- Itens de compra (usando f_cadastrar_json com nomes)
+-- Nota: Os subtotais serão calculados automaticamente pelos triggers
+SELECT f_cadastrar_json('item_compra', '{"cod_compra": "1", "nome_midia": "O Poderoso Chefão", "quantidade": "10", "subtotal": "250.00"}');
+SELECT f_cadastrar_json('item_compra', '{"cod_compra": "1", "nome_midia": "Pulp Fiction", "quantidade": "8", "subtotal": "240.00"}');
+SELECT f_cadastrar_json('item_compra', '{"cod_compra": "2", "nome_midia": "Forrest Gump", "quantidade": "15", "subtotal": "300.00"}');
+SELECT f_cadastrar_json('item_compra', '{"cod_compra": "2", "nome_midia": "Matrix", "quantidade": "12", "subtotal": "420.00"}');
+SELECT f_cadastrar_json('item_compra', '{"cod_compra": "3", "nome_midia": "Titanic", "quantidade": "20", "subtotal": "500.00"}');
+SELECT f_cadastrar_json('item_compra', '{"cod_compra": "3", "nome_midia": "O Senhor dos Anéis: A Sociedade do Anel", "quantidade": "10", "subtotal": "300.00"}');
+SELECT f_cadastrar_json('item_compra', '{"cod_compra": "4", "nome_midia": "Interestelar", "quantidade": "8", "subtotal": "320.00"}');
+SELECT f_cadastrar_json('item_compra', '{"cod_compra": "4", "nome_midia": "Vingadores: Ultimato", "quantidade": "6", "subtotal": "390.00"}');
+SELECT f_cadastrar_json('item_compra', '{"cod_compra": "5", "nome_midia": "O Rei Leão", "quantidade": "25", "subtotal": "500.00"}');
+SELECT f_cadastrar_json('item_compra', '{"cod_compra": "5", "nome_midia": "Jurassic Park", "quantidade": "12", "subtotal": "300.00"}');
+SELECT f_cadastrar_json('item_compra', '{"cod_compra": "6", "nome_midia": "O Poderoso Chefão", "quantidade": "5", "subtotal": "225.00"}');
+SELECT f_cadastrar_json('item_compra', '{"cod_compra": "6", "nome_midia": "Pulp Fiction", "quantidade": "4", "subtotal": "200.00"}');
 
--- Itens de venda (usando INSERT direto pois são chaves compostas)
-INSERT INTO item_venda (cod_midia, cod_venda, subtotal, qtd_item) VALUES
-  (1, 3, 50.00, 2), (3, 4, 60.00, 2), (5, 5, 80.00, 2), (7, 6, 70.00, 2),
-  (9, 7, 100.00, 2), (11, 8, 120.00, 2), (2, 3, 90.00, 2), (4, 4, 100.00, 2);
+-- Itens de venda (usando f_cadastrar_json com nomes)
+-- Nota: Os subtotais serão calculados automaticamente pelos triggers
+SELECT f_cadastrar_json('item_venda', '{"nome_midia": "O Poderoso Chefão", "cod_venda": "3", "qtd_item": "2"}');
+SELECT f_cadastrar_json('item_venda', '{"nome_midia": "Pulp Fiction", "cod_venda": "4", "qtd_item": "2"}');
+SELECT f_cadastrar_json('item_venda', '{"nome_midia": "Forrest Gump", "cod_venda": "5", "qtd_item": "2"}');
+SELECT f_cadastrar_json('item_venda', '{"nome_midia": "Matrix", "cod_venda": "6", "qtd_item": "2"}');
+SELECT f_cadastrar_json('item_venda', '{"nome_midia": "Titanic", "cod_venda": "7", "qtd_item": "2"}');
+SELECT f_cadastrar_json('item_venda', '{"nome_midia": "O Senhor dos Anéis: A Sociedade do Anel", "cod_venda": "8", "qtd_item": "2"}');
+SELECT f_cadastrar_json('item_venda', '{"nome_midia": "O Poderoso Chefão", "cod_venda": "3", "qtd_item": "2"}');
+SELECT f_cadastrar_json('item_venda', '{"nome_midia": "Pulp Fiction", "cod_venda": "4", "qtd_item": "2"}');
 
 -- ========================= DEMONSTRAÇÃO DE OPERAÇÕES =========================
 

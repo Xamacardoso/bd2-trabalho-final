@@ -16,11 +16,10 @@
 --     "total": "0"
 -- }');
 
--- Agora: Pode omitir dt_hora_venda (será adicionado automaticamente)
+-- Agora: Pode omitir dt_hora_venda e total (serão adicionados automaticamente)
 SELECT f_cadastrar_json('venda', '{
     "nome_funcionario": "Carlos Lima",
-    "nome_cliente": "João Silva",
-    "total": "0"
+    "nome_cliente": "João Silva"
 }');
 
 -- Verificar se a venda foi criada com timestamp automático
@@ -65,8 +64,7 @@ LIMIT 1;
 SELECT f_cadastrar_json('venda', '{
     "nome_funcionario": "Ana Paula",
     "nome_cliente": "Maria Souza",
-    "dt_hora_venda": "2024-01-16 15:45:00",
-    "total": "0"
+    "dt_hora_venda": "2024-01-16 15:45:00"
 }');
 
 -- Verificar se usou o timestamp fornecido
@@ -121,6 +119,7 @@ SELECT * FROM cliente WHERE nome = 'Pedro Teste Timestamp';
 SELECT 
     'Automático' as tipo,
     v.dt_hora_venda,
+    v.total,
     f.nome as funcionario,
     c.nome as cliente
 FROM venda v
@@ -131,6 +130,7 @@ UNION ALL
 SELECT 
     'Explícito' as tipo,
     v.dt_hora_venda,
+    v.total,
     f.nome as funcionario,
     c.nome as cliente
 FROM venda v
@@ -140,21 +140,63 @@ WHERE c.nome = 'Maria Souza'
 ORDER BY dt_hora_venda;
 
 -- ========================================
+-- TESTE 7: VERIFICAÇÃO DO CAMPO TOTAL
+-- ========================================
+
+-- Verificar se o campo total foi inicializado com 0
+SELECT 
+    'Total Inicializado' as teste,
+    v.cod_venda,
+    v.total,
+    f.nome as funcionario,
+    c.nome as cliente
+FROM venda v
+JOIN funcionario f ON v.cod_funcionario = f.cod_funcionario
+JOIN cliente c ON v.cod_cliente = c.cod_cliente
+WHERE c.nome IN ('João Silva', 'Maria Souza')
+ORDER BY v.cod_venda;
+
+-- ========================================
+-- TESTE 8: VENDA COM TOTAL EXPLÍCITO
+-- ========================================
+
+-- Testar se ainda aceita total explícito (para compatibilidade)
+SELECT f_cadastrar_json('venda', '{
+    "nome_funcionario": "Rafael Torres",
+    "nome_cliente": "Pedro Alves",
+    "total": "150.00"
+}');
+
+-- Verificar se usou o total fornecido
+SELECT 
+    'Total Explícito' as teste,
+    v.cod_venda,
+    v.total,
+    f.nome as funcionario,
+    c.nome as cliente
+FROM venda v
+JOIN funcionario f ON v.cod_funcionario = f.cod_funcionario
+JOIN cliente c ON v.cod_cliente = c.cod_cliente
+WHERE c.nome = 'Pedro Alves'
+ORDER BY v.cod_venda DESC
+LIMIT 1;
+
+-- ========================================
 -- LIMPEZA DOS TESTES
 -- ========================================
 
 -- Remover dados de teste
 DELETE FROM item_venda WHERE cod_venda IN (
     SELECT cod_venda FROM venda WHERE cod_cliente IN (
-        SELECT cod_cliente FROM cliente WHERE nome IN ('João Silva', 'Maria Souza', 'Pedro Teste Timestamp')
+        SELECT cod_cliente FROM cliente WHERE nome IN ('João Silva', 'Maria Souza', 'Pedro Alves', 'Pedro Teste Timestamp')
     )
 );
 
 DELETE FROM venda WHERE cod_cliente IN (
-    SELECT cod_cliente FROM cliente WHERE nome IN ('João Silva', 'Maria Souza', 'Pedro Teste Timestamp')
+    SELECT cod_cliente FROM cliente WHERE nome IN ('João Silva', 'Maria Souza', 'Pedro Alves', 'Pedro Teste Timestamp')
 );
 
-DELETE FROM cliente WHERE nome IN ('João Silva', 'Maria Souza', 'Pedro Teste Timestamp');
+DELETE FROM cliente WHERE nome IN ('João Silva', 'Maria Souza', 'Pedro Alves', 'Pedro Teste Timestamp');
 
 DELETE FROM compra WHERE cod_fornecedor IN (
     SELECT cod_fornecedor FROM fornecedor WHERE nome IN ('Warner Bros', 'Disney')
@@ -166,14 +208,16 @@ DELETE FROM compra WHERE cod_fornecedor IN (
 DO $$
 BEGIN
     RAISE INFO '========================================';
-    RAISE INFO 'AUTOMATIZAÇÃO DE TIMESTAMP IMPLEMENTADA!';
+    RAISE INFO 'AUTOMATIZAÇÃO DE TIMESTAMP E TOTAL IMPLEMENTADA!';
     RAISE INFO '========================================';
     RAISE INFO 'Benefícios:';
     RAISE INFO '- Vendas: dt_hora_venda adicionado automaticamente';
+    RAISE INFO '- Vendas: total inicializado com 0 (calculado pelos triggers)';
     RAISE INFO '- Compras: dt_compra adicionado automaticamente';
     RAISE INFO '- Reduz campos obrigatórios no JSON';
-    RAISE INFO '- Mantém compatibilidade com timestamps explícitos';
+    RAISE INFO '- Mantém compatibilidade com valores explícitos';
     RAISE INFO '- Não afeta outras tabelas';
     RAISE INFO '- Mensagens informativas sobre campos adicionados';
+    RAISE INFO '- Sistema mais robusto com triggers calculando totais';
     RAISE INFO '========================================';
 END $$; 

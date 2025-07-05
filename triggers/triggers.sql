@@ -97,28 +97,23 @@ EXECUTE FUNCTION impedir_venda_sem_estoque();
 CREATE OR REPLACE FUNCTION atualizar_estoque_compra()
 RETURNS TRIGGER AS
 $$
-	DECLARE
-	quantidade_nova_compra int;
-	BEGIN
-		-- Atualiza o estoque da mídia
-		SELECT coalesce(sum(quantidade), 0) into quantidade_nova_compra from item_compra AS ic
-		WHERE ic.cod_compra = new.cod_compra;
+BEGIN
+	-- Atualiza o estoque da mídia com apenas a quantidade do item atual
+	UPDATE midia 
+	SET qtd_estoque = qtd_estoque + NEW.quantidade
+	WHERE midia.cod_midia = NEW.cod_midia;
 
-		UPDATE midia 
-		SET qtd_estoque = qtd_estoque + quantidade_nova_compra
-		WHERE midia.cod_midia = new.cod_midia;
+	-- Atualiza o total da compra baseado na soma dos subtotais dos itens
+	UPDATE compra
+	SET total = (
+		SELECT COALESCE(SUM(subtotal), 0)
+		FROM item_compra
+		WHERE cod_compra = NEW.cod_compra
+	)
+	WHERE cod_compra = NEW.cod_compra;
 
-		-- Atualiza o total da compra baseado na soma dos subtotais dos itens
-		UPDATE compra
-		SET total = (
-			SELECT COALESCE(SUM(subtotal), 0)
-			FROM item_compra
-			WHERE cod_compra = new.cod_compra
-		)
-		WHERE cod_compra = new.cod_compra;
-
-		RETURN NEW;
-	END;
+	RETURN NEW;
+END;
 $$
 LANGUAGE plpgsql;
 

@@ -22,9 +22,7 @@ SELECT f_cadastrar_json('midia', '{
 -- Agora você pode fazer:
 SELECT f_cadastrar_json('venda', '{
     "nome_funcionario": "Carlos lima",
-    "nome_cliente": "peter parker",
-    "dt_hora_venda": "2025-07-02 14:30:00",
-    "total": "89.70"
+    "nome_cliente": "peter parker"
 }');
 
 Select * from venda;
