@@ -74,6 +74,7 @@ DECLARE
     cod_midia_v int;
     cod_compra_v int;
     cod_venda_v int;
+    colunas_para_verificar text[];
 BEGIN
     -- Verifica se a tabela existe
     IF NOT tabela_existe(nome_tabela) THEN
@@ -90,6 +91,19 @@ BEGIN
         SELECT data_type INTO tipo_coluna_v 
         FROM information_schema.columns 
         WHERE table_name = nome_tabela AND column_name = coluna_v;
+        
+        -- Validação de tipo: impede string em campo numérico e número em campo string
+        IF tipo_coluna_v IN ('integer', 'numeric', 'float', 'double precision', 'real', 'smallint', 'bigint') THEN
+            -- Se valor não for numérico, lança erro
+            IF valor_v ~ '[^0-9\.]' THEN
+                RAISE EXCEPTION 'Valor "%" não é numérico para a coluna %!', valor_v, coluna_v;
+            END IF;
+        ELSIF tipo_coluna_v IN ('character varying', 'text') THEN
+            -- Se valor for puramente numérico, lança erro
+            IF valor_v ~ '^\d+$' THEN
+                RAISE EXCEPTION 'Valor "%" não pode ser apenas número para a coluna % (esperado texto)!', valor_v, coluna_v;
+            END IF;
+        END IF;
         
         -- Tratamento especial para campos que usam nomes em vez de códigos
         IF coluna_v = 'nome_cliente' THEN
@@ -178,8 +192,33 @@ BEGIN
         END IF;
     END LOOP;
 
-    -- Verifica se as colunas existem
-    IF NOT colunas_existem(nome_tabela, array_to_string(colunas_v, ',')) THEN
+    -- AUTOMATIZAÇÃO DE TIMESTAMP PARA VENDAS E COMPRAS
+    -- Adiciona campos de timestamp automaticamente se não fornecidos
+    IF nome_tabela = 'venda' AND NOT ('dt_hora_venda' = ANY(colunas_v)) THEN
+        i_v := i_v + 1;
+        colunas_v[i_v] := 'dt_hora_venda';
+        valores_v[i_v] := 'CURRENT_TIMESTAMP';
+        RAISE INFO 'Campo dt_hora_venda adicionado automaticamente com CURRENT_TIMESTAMP';
+    END IF;
+    
+    IF nome_tabela = 'compra' AND NOT ('dt_compra' = ANY(colunas_v)) THEN
+        i_v := i_v + 1;
+        colunas_v[i_v] := 'dt_compra';
+        valores_v[i_v] := 'CURRENT_TIMESTAMP';
+        RAISE INFO 'Campo dt_compra adicionado automaticamente com CURRENT_TIMESTAMP';
+    END IF;
+
+    -- Verifica se as colunas existem (apenas as colunas originais do JSON)
+    -- Não inclui os campos automáticos na verificação para evitar erro
+    colunas_para_verificar := ARRAY(
+        SELECT unnest(colunas_v) 
+        WHERE unnest != 'dt_hora_venda' 
+        AND unnest != 'dt_compra'
+        OR (unnest = 'dt_hora_venda' AND nome_tabela = 'venda')
+        OR (unnest = 'dt_compra' AND nome_tabela = 'compra')
+    );
+    
+    IF NOT colunas_existem(nome_tabela, array_to_string(colunas_para_verificar, ',')) THEN
         RAISE EXCEPTION 'Uma ou mais colunas não existem na tabela %!', nome_tabela;
     END IF;
 

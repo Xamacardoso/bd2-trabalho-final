@@ -39,7 +39,7 @@ create table funcionario(
 --Título
 create table titulo(
 	cod_titulo serial not null primary key,
-	nome varchar(90) not null,
+	nome varchar(90) not null unique,
 	classificacao_ind int not null,
 	ano_lancamento int not null
 );

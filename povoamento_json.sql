@@ -10,6 +10,10 @@ SELECT f_cadastrar_json('categoria', '{"nome": "Drama"}');
 SELECT f_cadastrar_json('categoria', '{"nome": "Terror"}');
 SELECT f_cadastrar_json('categoria', '{"nome": "Documentário"}');
 SELECT f_cadastrar_json('categoria', '{"nome": "Romance"}');
+SELECT f_cadastrar_json('categoria', '{"nome": "Ficção Científica"}');
+SELECT f_cadastrar_json('categoria', '{"nome": "Aventura"}');
+SELECT f_cadastrar_json('categoria', '{"nome": "Suspense"}');
+SELECT f_cadastrar_json('categoria', '{"nome": "Animação"}');
 
 SELECT * FROM categoria;
 
@@ -22,12 +26,12 @@ SELECT f_cadastrar_json('tipo_midia', '{"nome_formato": "4K Blu-ray"}');
 SELECT f_cadastrar_json('tipo_midia', '{"nome_formato": "Streaming"}');
 
 -- Cadastro de fornecedores
-SELECT f_cadastrar_json('fornecedor', '{"nome": "Fornecedor 1", "telefone": "1111-1111", "email": "forn1@email.com"}');
-SELECT f_cadastrar_json('fornecedor', '{"nome": "Fornecedor 2", "telefone": "2222-2222", "email": "forn2@email.com"}');
-SELECT f_cadastrar_json('fornecedor', '{"nome": "Fornecedor 3", "telefone": "3333-3333", "email": "forn3@email.com"}');
-SELECT f_cadastrar_json('fornecedor', '{"nome": "Fornecedor 4", "telefone": "4444-4444", "email": "forn4@email.com"}');
-SELECT f_cadastrar_json('fornecedor', '{"nome": "Fornecedor 5", "telefone": "5555-5555", "email": "forn5@email.com"}');
-SELECT f_cadastrar_json('fornecedor', '{"nome": "Fornecedor 6", "telefone": "6666-6666", "email": "forn6@email.com"}');
+SELECT f_cadastrar_json('fornecedor', '{"nome": "Warner Bros", "telefone": "1111-1111", "email": "contato@warner.com"}');
+SELECT f_cadastrar_json('fornecedor', '{"nome": "Disney", "telefone": "2222-2222", "email": "contato@disney.com"}');
+SELECT f_cadastrar_json('fornecedor', '{"nome": "Universal Pictures", "telefone": "3333-3333", "email": "contato@universal.com"}');
+SELECT f_cadastrar_json('fornecedor', '{"nome": "Paramount", "telefone": "4444-4444", "email": "contato@paramount.com"}');
+SELECT f_cadastrar_json('fornecedor', '{"nome": "Sony Pictures", "telefone": "5555-5555", "email": "contato@sony.com"}');
+SELECT f_cadastrar_json('fornecedor', '{"nome": "20th Century Fox", "telefone": "6666-6666", "email": "contato@fox.com"}');
 
 SELECT * FROM fornecedor
 
@@ -39,7 +43,6 @@ SELECT f_cadastrar_json('cliente', '{"nome": "Luciana Dias", "telefone": "9999-7
 SELECT f_cadastrar_json('cliente', '{"nome": "Bruno Costa", "telefone": "5555-6666", "email": "bruno@email.com", "cep": "64004-000"}');
 SELECT f_cadastrar_json('cliente', '{"nome": "Fernanda Lima", "telefone": "4444-5555", "email": "fernanda@email.com", "cep": "64005-000"}');
 
-
 -- Cadastro de funcionários
 SELECT f_cadastrar_json('funcionario', '{"nome": "Carlos Lima", "telefone": "7777-7777", "cep": "64002-000", "salario": 2500.00}');
 SELECT f_cadastrar_json('funcionario', '{"nome": "Ana Paula", "telefone": "6666-6666", "cep": "64003-000", "salario": 3200.00}');
@@ -50,41 +53,62 @@ SELECT f_cadastrar_json('funcionario', '{"nome": "Juliana Rocha", "telefone": "8
 
 SELECT * FROM funcionario
 
--- Cadastro de títulos
-SELECT f_cadastrar_json('titulo', '{"nome": "Filme A", "classificacao_ind": 14, "ano_lancamento": 2020}');
-SELECT f_cadastrar_json('titulo', '{"nome": "Filme B", "classificacao_ind": 12, "ano_lancamento": 2018}');
-SELECT f_cadastrar_json('titulo', '{"nome": "Filme C", "classificacao_ind": 16, "ano_lancamento": 2021}');
-SELECT f_cadastrar_json('titulo', '{"nome": "Filme D", "classificacao_ind": 10, "ano_lancamento": 2019}');
-SELECT f_cadastrar_json('titulo', '{"nome": "Filme E", "classificacao_ind": 18, "ano_lancamento": 2022}');
-SELECT f_cadastrar_json('titulo', '{"nome": "Filme F", "classificacao_ind": 12, "ano_lancamento": 2017}');
+-- Cadastro de títulos (FILMES FAMOSOS)
+SELECT f_cadastrar_json('titulo', '{"nome": "O Poderoso Chefão", "classificacao_ind": 16, "ano_lancamento": 1972}');
+SELECT f_cadastrar_json('titulo', '{"nome": "Pulp Fiction", "classificacao_ind": 18, "ano_lancamento": 1994}');
+SELECT f_cadastrar_json('titulo', '{"nome": "Forrest Gump", "classificacao_ind": 12, "ano_lancamento": 1994}');
+SELECT f_cadastrar_json('titulo', '{"nome": "Matrix", "classificacao_ind": 14, "ano_lancamento": 1999}');
+SELECT f_cadastrar_json('titulo', '{"nome": "Titanic", "classificacao_ind": 12, "ano_lancamento": 1997}');
+SELECT f_cadastrar_json('titulo', '{"nome": "O Senhor dos Anéis: A Sociedade do Anel", "classificacao_ind": 12, "ano_lancamento": 2001}');
+SELECT f_cadastrar_json('titulo', '{"nome": "Interestelar", "classificacao_ind": 10, "ano_lancamento": 2014}');
+SELECT f_cadastrar_json('titulo', '{"nome": "Vingadores: Ultimato", "classificacao_ind": 12, "ano_lancamento": 2019}');
+SELECT f_cadastrar_json('titulo', '{"nome": "O Rei Leão", "classificacao_ind": 0, "ano_lancamento": 1994}');
+SELECT f_cadastrar_json('titulo', '{"nome": "Jurassic Park", "classificacao_ind": 12, "ano_lancamento": 1993}');
+SELECT f_cadastrar_json('titulo', '{"nome": "O Silêncio dos Inocentes", "classificacao_ind": 16, "ano_lancamento": 1991}');
+SELECT f_cadastrar_json('titulo', '{"nome": "Clube da Luta", "classificacao_ind": 18, "ano_lancamento": 1999}');
+SELECT f_cadastrar_json('titulo', '{"nome": "O Resgate do Soldado Ryan", "classificacao_ind": 16, "ano_lancamento": 1998}');
+SELECT f_cadastrar_json('titulo', '{"nome": "Os Bons Companheiros", "classificacao_ind": 16, "ano_lancamento": 1990}');
+SELECT f_cadastrar_json('titulo', '{"nome": "Um Sonho de Liberdade", "classificacao_ind": 14, "ano_lancamento": 1994}');
 
--- Cadastro de compras
-SELECT f_cadastrar_json('compra', '{"cod_fornecedor": 1, "total": 300.00, "dt_compra": "2023-01-10 10:00:00"}');
-SELECT f_cadastrar_json('compra', '{"cod_fornecedor": 2, "total": 500.00, "dt_compra": "2023-02-15 15:30:00"}');
-SELECT f_cadastrar_json('compra', '{"cod_fornecedor": 3, "total": 700.00, "dt_compra": "2023-03-10 11:00:00"}');
-SELECT f_cadastrar_json('compra', '{"cod_fornecedor": 4, "total": 900.00, "dt_compra": "2023-04-12 12:30:00"}');
-SELECT f_cadastrar_json('compra', '{"cod_fornecedor": 5, "total": 1200.00, "dt_compra": "2023-05-15 13:45:00"}');
-SELECT f_cadastrar_json('compra', '{"cod_fornecedor": 6, "total": 1500.00, "dt_compra": "2023-06-18 09:20:00"}');
+-- Cadastro de compras (com timestamp automático)
+SELECT f_cadastrar_json('compra', '{"nome_fornecedor": "Warner Bros", "total": 300.00}');
+SELECT f_cadastrar_json('compra', '{"nome_fornecedor": "Disney", "total": 500.00}');
+SELECT f_cadastrar_json('compra', '{"nome_fornecedor": "Universal Pictures", "total": 700.00}');
+SELECT f_cadastrar_json('compra', '{"nome_fornecedor": "Paramount", "total": 900.00}');
+SELECT f_cadastrar_json('compra', '{"nome_fornecedor": "Sony Pictures", "total": 1200.00}');
+SELECT f_cadastrar_json('compra', '{"nome_fornecedor": "20th Century Fox", "total": 1500.00}');
 
--- Cadastro de mídias
-SELECT f_cadastrar_json('midia', '{"valor_unid": 30.00, "qtd_estoque": 10, "cod_tipo_midia": 1, "cod_titulo": 1}');
-SELECT f_cadastrar_json('midia', '{"valor_unid": 50.00, "qtd_estoque": 5, "cod_tipo_midia": 2, "cod_titulo": 2}');
-SELECT f_cadastrar_json('midia', '{"valor_unid": 40.00, "qtd_estoque": 8, "cod_tipo_midia": 3, "cod_titulo": 3}');
-SELECT f_cadastrar_json('midia', '{"valor_unid": 60.00, "qtd_estoque": 12, "cod_tipo_midia": 4, "cod_titulo": 4}');
-SELECT f_cadastrar_json('midia', '{"valor_unid": 25.00, "qtd_estoque": 20, "cod_tipo_midia": 5, "cod_titulo": 5}');
-SELECT f_cadastrar_json('midia', '{"valor_unid": 80.00, "qtd_estoque": 7, "cod_tipo_midia": 6, "cod_titulo": 6}');
-SELECT f_cadastrar_json('midia', '{"valor_unid": 35.00, "qtd_estoque": 15, "cod_tipo_midia": 1, "cod_titulo": 1}');
-SELECT f_cadastrar_json('midia', '{"valor_unid": 55.00, "qtd_estoque": 9, "cod_tipo_midia": 2, "cod_titulo": 2}');
+-- Cadastro de mídias (com preços variados baseados no tipo de mídia)
+SELECT f_cadastrar_json('midia', '{"valor_unid": 25.00, "qtd_estoque": 15, "cod_tipo_midia": 1, "cod_titulo": 1}'); -- DVD O Poderoso Chefão
+SELECT f_cadastrar_json('midia', '{"valor_unid": 45.00, "qtd_estoque": 8, "cod_tipo_midia": 2, "cod_titulo": 1}'); -- Blu-ray O Poderoso Chefão
+SELECT f_cadastrar_json('midia', '{"valor_unid": 30.00, "qtd_estoque": 12, "cod_tipo_midia": 1, "cod_titulo": 2}'); -- DVD Pulp Fiction
+SELECT f_cadastrar_json('midia', '{"valor_unid": 50.00, "qtd_estoque": 6, "cod_tipo_midia": 2, "cod_titulo": 2}'); -- Blu-ray Pulp Fiction
+SELECT f_cadastrar_json('midia', '{"valor_unid": 20.00, "qtd_estoque": 20, "cod_tipo_midia": 1, "cod_titulo": 3}'); -- DVD Forrest Gump
+SELECT f_cadastrar_json('midia', '{"valor_unid": 40.00, "qtd_estoque": 10, "cod_tipo_midia": 2, "cod_titulo": 3}'); -- Blu-ray Forrest Gump
+SELECT f_cadastrar_json('midia', '{"valor_unid": 35.00, "qtd_estoque": 18, "cod_tipo_midia": 1, "cod_titulo": 4}'); -- DVD Matrix
+SELECT f_cadastrar_json('midia', '{"valor_unid": 55.00, "qtd_estoque": 9, "cod_tipo_midia": 2, "cod_titulo": 4}'); -- Blu-ray Matrix
+SELECT f_cadastrar_json('midia', '{"valor_unid": 25.00, "qtd_estoque": 25, "cod_tipo_midia": 1, "cod_titulo": 5}'); -- DVD Titanic
+SELECT f_cadastrar_json('midia', '{"valor_unid": 45.00, "qtd_estoque": 12, "cod_tipo_midia": 2, "cod_titulo": 5}'); -- Blu-ray Titanic
+SELECT f_cadastrar_json('midia', '{"valor_unid": 30.00, "qtd_estoque": 16, "cod_tipo_midia": 1, "cod_titulo": 6}'); -- DVD Senhor dos Anéis
+SELECT f_cadastrar_json('midia', '{"valor_unid": 60.00, "qtd_estoque": 8, "cod_tipo_midia": 5, "cod_titulo": 6}'); -- 4K Senhor dos Anéis
+SELECT f_cadastrar_json('midia', '{"valor_unid": 40.00, "qtd_estoque": 14, "cod_tipo_midia": 1, "cod_titulo": 7}'); -- DVD Interestelar
+SELECT f_cadastrar_json('midia', '{"valor_unid": 70.00, "qtd_estoque": 7, "cod_tipo_midia": 5, "cod_titulo": 7}'); -- 4K Interestelar
+SELECT f_cadastrar_json('midia', '{"valor_unid": 35.00, "qtd_estoque": 22, "cod_tipo_midia": 1, "cod_titulo": 8}'); -- DVD Vingadores
+SELECT f_cadastrar_json('midia', '{"valor_unid": 65.00, "qtd_estoque": 11, "cod_tipo_midia": 5, "cod_titulo": 8}'); -- 4K Vingadores
+SELECT f_cadastrar_json('midia', '{"valor_unid": 20.00, "qtd_estoque": 30, "cod_tipo_midia": 1, "cod_titulo": 9}'); -- DVD Rei Leão
+SELECT f_cadastrar_json('midia', '{"valor_unid": 40.00, "qtd_estoque": 15, "cod_tipo_midia": 2, "cod_titulo": 9}'); -- Blu-ray Rei Leão
+SELECT f_cadastrar_json('midia', '{"valor_unid": 25.00, "qtd_estoque": 18, "cod_tipo_midia": 1, "cod_titulo": 10}'); -- DVD Jurassic Park
+SELECT f_cadastrar_json('midia', '{"valor_unid": 45.00, "qtd_estoque": 10, "cod_tipo_midia": 2, "cod_titulo": 10}'); -- Blu-ray Jurassic Park
 
 SELECT * FROM midia;
 
--- Cadastro de vendas
-SELECT f_cadastrar_json('venda', '{"cod_funcionario": 9, "cod_cliente": 1, "dt_hora_venda": "2023-03-01 14:00:00", "total": 60.00}');
-SELECT f_cadastrar_json('venda', '{"cod_funcionario": 10, "cod_cliente": 2, "dt_hora_venda": "2023-03-02 16:00:00", "total": 100.00}');
-SELECT f_cadastrar_json('venda', '{"cod_funcionario": 11, "cod_cliente": 3, "dt_hora_venda": "2023-03-05 10:00:00", "total": 80.00}');
-SELECT f_cadastrar_json('venda', '{"cod_funcionario": 12, "cod_cliente": 4, "dt_hora_venda": "2023-03-06 11:00:00", "total": 120.00}');
-SELECT f_cadastrar_json('venda', '{"cod_funcionario": 13, "cod_cliente": 5, "dt_hora_venda": "2023-03-07 12:00:00", "total": 200.00}');
-SELECT f_cadastrar_json('venda', '{"cod_funcionario": 14, "cod_cliente": 6, "dt_hora_venda": "2023-03-08 13:00:00", "total": 300.00}');
+-- Cadastro de vendas (com timestamp automático)
+SELECT f_cadastrar_json('venda', '{"nome_funcionario": "Carlos Lima", "nome_cliente": "João Silva", "total": 70.00}');
+SELECT f_cadastrar_json('venda', '{"nome_funcionario": "Ana Paula", "nome_cliente": "Maria Souza", "total": 95.00}');
+SELECT f_cadastrar_json('venda', '{"nome_funcionario": "Marcos Silva", "nome_cliente": "Pedro Alves", "total": 120.00}');
+SELECT f_cadastrar_json('venda', '{"nome_funcionario": "Patricia Souza", "nome_cliente": "Luciana Dias", "total": 85.00}');
+SELECT f_cadastrar_json('venda', '{"nome_funcionario": "Rafael Torres", "nome_cliente": "Bruno Costa", "total": 135.00}');
+SELECT f_cadastrar_json('venda', '{"nome_funcionario": "Juliana Rocha", "nome_cliente": "Fernanda Lima", "total": 200.00}');
 
 SELECT * FROM venda
 
@@ -92,17 +116,48 @@ SELECT * FROM venda
 
 -- Relacionamentos título-categoria (usando INSERT direto pois são chaves compostas)
 INSERT INTO titulo_categoria (cod_categoria, cod_titulo) VALUES
-  (1, 1), (2, 2), (3, 3), (4, 4), (5, 5), (6, 6), (1, 2), (2, 1);
+  (1, 1), -- O Poderoso Chefão - Ação
+  (3, 1), -- O Poderoso Chefão - Drama
+  (1, 2), -- Pulp Fiction - Ação
+  (2, 2), -- Pulp Fiction - Comédia
+  (3, 3), -- Forrest Gump - Drama
+  (6, 3), -- Forrest Gump - Romance
+  (7, 4), -- Matrix - Ficção Científica
+  (1, 4), -- Matrix - Ação
+  (6, 5), -- Titanic - Romance
+  (3, 5), -- Titanic - Drama
+  (8, 6), -- Senhor dos Anéis - Aventura
+  (7, 6), -- Senhor dos Anéis - Ficção Científica
+  (7, 7), -- Interestelar - Ficção Científica
+  (3, 7), -- Interestelar - Drama
+  (1, 8), -- Vingadores - Ação
+  (8, 8), -- Vingadores - Aventura
+  (10, 9), -- Rei Leão - Animação
+  (8, 9), -- Rei Leão - Aventura
+  (8, 10), -- Jurassic Park - Aventura
+  (7, 10), -- Jurassic Park - Ficção Científica
+  (9, 11), -- Silêncio dos Inocentes - Suspense
+  (3, 11), -- Silêncio dos Inocentes - Drama
+  (9, 12), -- Clube da Luta - Suspense
+  (1, 12), -- Clube da Luta - Ação
+  (1, 13), -- Resgate do Soldado Ryan - Ação
+  (3, 13), -- Resgate do Soldado Ryan - Drama
+  (1, 14), -- Os Bons Companheiros - Ação
+  (3, 14), -- Os Bons Companheiros - Drama
+  (3, 15), -- Um Sonho de Liberdade - Drama
+  (9, 15); -- Um Sonho de Liberdade - Suspense
 
 -- Itens de compra (usando INSERT direto pois são chaves compostas)
 INSERT INTO item_compra (cod_compra, cod_midia, quantidade, subtotal) VALUES
-  (1, 1, 5, 150.00), (2, 2, 5, 250.00), (3, 3, 10, 400.00), (4, 4, 15, 900.00),
-  (5, 5, 20, 500.00), (6, 6, 7, 560.00), (1, 2, 3, 150.00), (2, 1, 2, 60.00);
+  (1, 1, 10, 250.00), (1, 3, 8, 240.00), (2, 5, 15, 300.00), (2, 7, 12, 420.00),
+  (3, 9, 20, 500.00), (3, 11, 10, 300.00), (4, 13, 8, 320.00), (4, 15, 6, 390.00),
+  (5, 17, 25, 500.00), (5, 19, 12, 300.00), (6, 2, 5, 225.00), (6, 4, 4, 200.00);
 
 -- Itens de venda (usando INSERT direto pois são chaves compostas)
 INSERT INTO item_venda (cod_midia, cod_venda, subtotal, qtd_item) VALUES
-  (1, 3, 60.00, 2), (2, 4, 100.00, 2), (3, 5, 80.00, 2), (4, 6, 120.00, 3),
-  (5, 7, 200.00, 4), (6, 8, 300.00, 5);
+  (1, 3, 50.00, 2), (3, 4, 60.00, 2), (5, 5, 80.00, 2), (7, 6, 70.00, 2),
+  (9, 7, 100.00, 2), (11, 8, 120.00, 2), (2, 3, 90.00, 2), (4, 4, 100.00, 2);
+
 -- ========================= DEMONSTRAÇÃO DE OPERAÇÕES =========================
 
 -- Demonstração de atualização usando JSON
@@ -140,20 +195,6 @@ UNION ALL
 SELECT 'Itens de Compra', COUNT(*) FROM item_compra
 UNION ALL
 SELECT 'Itens de Venda', COUNT(*) FROM item_venda;
-
--- Verificar algumas relações importantes
-SELECT 
-    t.nome as titulo,
-    c.nome as categoria,
-    tm.nome_formato as formato,
-    m.valor_unid,
-    m.qtd_estoque
-FROM titulo t
-JOIN titulo_categoria tc ON t.cod_titulo = tc.cod_titulo
-JOIN categoria c ON tc.cod_categoria = c.cod_categoria
-JOIN midia m ON t.cod_titulo = m.cod_titulo
-JOIN tipo_midia tm ON m.cod_tipo_midia = tm.cod_tipo_midia
-ORDER BY t.nome;
 
 -- ========================= FUNÇÃO UNIVERSAL JSON =========================
 

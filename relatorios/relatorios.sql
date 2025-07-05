@@ -94,3 +94,43 @@ JOIN midia m ON t.cod_titulo = m.cod_titulo
 JOIN item_venda iv ON m.cod_midia = iv.cod_midia
 GROUP BY c.nome
 ORDER BY total_vendas DESC;
+
+--- view para acessar o católogo de mídias ao cliente
+CREATE OR REPLACE VIEW  catalogo_midia AS SELECT 
+    t.nome as titulo,
+    c.nome as categoria,
+    tm.nome_formato as formato,
+    m.valor_unid,
+    m.qtd_estoque
+FROM titulo t
+JOIN titulo_categoria tc ON t.cod_titulo = tc.cod_titulo
+JOIN categoria c ON tc.cod_categoria = c.cod_categoria
+JOIN midia m ON t.cod_titulo = m.cod_titulo
+JOIN tipo_midia tm ON m.cod_tipo_midia = tm.cod_tipo_midia
+ORDER BY t.nome;
+
+SELECT * from catalogo_midia;
+
+-- Função para listar todos os roles e suas permissões
+CREATE OR REPLACE FUNCTION listar_roles_sistema()
+RETURNS TABLE(role_name text, description text, permissions text) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        'role_gerente'::text,
+        'Gerente da Locadora - Gestão de negócio'::text,
+        'SELECT, INSERT, UPDATE em todas as tabelas'::text
+    UNION ALL
+    SELECT 
+        'role_atendente'::text,
+        'Atendente de Balcão - Atendimento ao cliente'::text,
+        'SELECT em catálogo, INSERT/UPDATE em vendas e clientes'::text
+    UNION ALL
+    SELECT 
+        'role_cliente'::text,
+        'Cliente da Locadora - Auto-atendimento'::text,
+        'Ver catálogo, fazer aluguel, consultar histórico, atualizar dados'::text;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+SELECT listar_roles_sistema()
