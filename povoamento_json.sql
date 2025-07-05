@@ -33,7 +33,7 @@ SELECT f_cadastrar_json('fornecedor', '{"nome": "Paramount", "telefone": "4444-4
 SELECT f_cadastrar_json('fornecedor', '{"nome": "Sony Pictures", "telefone": "5555-5555", "email": "contato@sony.com"}');
 SELECT f_cadastrar_json('fornecedor', '{"nome": "20th Century Fox", "telefone": "6666-6666", "email": "contato@fox.com"}');
 
-SELECT * FROM fornecedor
+SELECT * FROM fornecedor;
 
 -- Cadastro de clientes
 SELECT f_cadastrar_json('cliente', '{"nome": "João Silva", "telefone": "9999-9999", "email": "joao@email.com", "cep": "64000-000"}');
@@ -51,7 +51,7 @@ SELECT f_cadastrar_json('funcionario', '{"nome": "Patricia Souza", "telefone": "
 SELECT f_cadastrar_json('funcionario', '{"nome": "Rafael Torres", "telefone": "1111-4444", "cep": "64008-000", "salario": 2700.00}');
 SELECT f_cadastrar_json('funcionario', '{"nome": "Juliana Rocha", "telefone": "8888-1111", "cep": "64009-000", "salario": 4000.00}');
 
-SELECT * FROM funcionario
+SELECT * FROM funcionario;
 
 -- Cadastro de títulos (FILMES FAMOSOS)
 SELECT f_cadastrar_json('titulo', '{"nome": "O Poderoso Chefão", "classificacao_ind": 16, "ano_lancamento": 1972}');
@@ -110,7 +110,7 @@ SELECT f_cadastrar_json('venda', '{"nome_funcionario": "Patricia Souza", "nome_c
 SELECT f_cadastrar_json('venda', '{"nome_funcionario": "Rafael Torres", "nome_cliente": "Bruno Costa"}');
 SELECT f_cadastrar_json('venda', '{"nome_funcionario": "Juliana Rocha", "nome_cliente": "Fernanda Lima"}');
 
-SELECT * FROM venda
+SELECT * FROM venda;
 
 -- ========================= RELACIONAMENTOS USANDO f_cadastrar_json =========================
 

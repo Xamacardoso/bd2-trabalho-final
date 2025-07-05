@@ -134,8 +134,12 @@ BEGIN
             colunas_v[i_v] := 'cod_fornecedor';
             
         ELSIF coluna_v = 'nome_titulo' THEN
-            -- Busca o código do título pelo nome (aplicando formatação)
-            SELECT cod_titulo INTO cod_titulo_v FROM titulo WHERE nome = initcap(valor_v);
+            -- Busca o código do título pelo nome 
+            SELECT cod_titulo INTO cod_titulo_v FROM titulo WHERE nome = valor_v;
+            IF cod_titulo_v IS NULL THEN
+                -- Tenta com initcap se não encontrar
+                SELECT cod_titulo INTO cod_titulo_v FROM titulo WHERE nome = initcap(valor_v);
+            END IF;
             IF cod_titulo_v IS NULL THEN
                 RAISE EXCEPTION 'Título com nome "%" não encontrado!', valor_v;
             END IF;
@@ -161,11 +165,18 @@ BEGIN
             colunas_v[i_v] := 'cod_categoria';
             
         ELSIF coluna_v = 'nome_midia' THEN
-            -- Busca o código da mídia pelo título (aplicando formatação)
+            -- Busca o código da mídia pelo título (busca flexível)
             SELECT m.cod_midia INTO cod_midia_v 
             FROM midia m 
             JOIN titulo t ON m.cod_titulo = t.cod_titulo 
-            WHERE t.nome = initcap(valor_v);
+            WHERE t.nome = valor_v;
+            IF cod_midia_v IS NULL THEN
+                -- Tenta com initcap se não encontrar
+                SELECT m.cod_midia INTO cod_midia_v 
+                FROM midia m 
+                JOIN titulo t ON m.cod_titulo = t.cod_titulo 
+                WHERE t.nome = initcap(valor_v);
+            END IF;
             IF cod_midia_v IS NULL THEN
                 RAISE EXCEPTION 'Mídia com título "%" não encontrada!', valor_v;
             END IF;
@@ -220,13 +231,14 @@ BEGIN
     -- Verifica se as colunas existem (apenas as colunas originais do JSON)
     -- Não inclui os campos automáticos na verificação para evitar erro
     colunas_para_verificar := ARRAY(
-        SELECT unnest(colunas_v) 
-        WHERE unnest != 'dt_hora_venda' 
-        AND unnest != 'dt_compra'
-        AND unnest != 'total'
-        OR (unnest = 'dt_hora_venda' AND nome_tabela = 'venda')
-        OR (unnest = 'dt_compra' AND nome_tabela = 'compra')
-        OR (unnest = 'total' AND nome_tabela = 'venda')
+        SELECT col 
+        FROM unnest(colunas_v) AS col 
+        WHERE col != 'dt_hora_venda' 
+        AND col != 'dt_compra'
+        AND col != 'total'
+        OR (col = 'dt_hora_venda' AND nome_tabela = 'venda')
+        OR (col = 'dt_compra' AND nome_tabela = 'compra')
+        OR (col = 'total' AND nome_tabela = 'venda')
     );
     
     IF NOT colunas_existem(nome_tabela, array_to_string(colunas_para_verificar, ',')) THEN
